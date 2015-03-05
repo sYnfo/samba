@@ -823,7 +823,7 @@ static bool test_unref_reparent(void)
   measure the speed of talloc versus malloc
 */
 static bool test_speed(void)
-{
+{/*
 	void *ctx = talloc_new(NULL);
 	unsigned count;
 	const int loop = 1000;
@@ -889,7 +889,7 @@ static bool test_speed(void)
 	fprintf(stderr, "malloc: %.0f ops/sec\n", count/timeval_elapsed(&tv));
 
 	printf("success: speed\n");
-
+*/
 	return true;
 }
 
