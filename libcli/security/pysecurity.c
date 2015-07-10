@@ -23,8 +23,6 @@
 #include "libcli/security/security.h"
 #include "pytalloc.h"
 
-void initsecurity(void);
-
 static PyObject *py_se_access_check(PyObject *module, PyObject *args, PyObject *kwargs)
 {
 	NTSTATUS nt_status;
@@ -74,12 +72,37 @@ static PyMethodDef py_security_methods[] = {
 	{ NULL },
 };
 
+#define MODULE_DOC "Security support."
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+    PyModuleDef_HEAD_INIT,
+    .m_name = "security",
+    .m_doc = MODULE_DOC,
+    .m_size = -1,
+	.m_methods = py_security_methods,
+};
+#endif
+
+static PyObject* module_init(void)
+{
+#if PY_MAJOR_VERSION >= 3
+	return PyModule_Create(&moduledef);
+#else
+	return Py_InitModule3("security", py_security_methods, MODULE_DOC);
+#endif
+}
+
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit_security(void);
+PyMODINIT_FUNC PyInit_security(void)
+{
+    return module_init();
+}
+#else
+void initsecurity(void);
 void initsecurity(void)
 {
-	PyObject *m;
-
-	m = Py_InitModule3("security", py_security_methods,
-			   "Security support.");
-	if (m == NULL)
-		return;
+    module_init();
 }
+#endif
