@@ -20,6 +20,14 @@
 #include <Python.h>
 #include "libcli/security/security.h"
 
+#if PY_MAJOR_VERSION >= 3
+#define PyStr_FromString PyUnicode_FromString
+#define PyStr_FromFormat PyUnicode_FromFormat
+#else
+#define PyStr_FromString PyString_FromString
+#define PyStr_FromFormat PyString_FromFormat
+#endif
+
 static void PyType_AddMethods(PyTypeObject *type, PyMethodDef *methods)
 {
 	PyObject *dict;
@@ -83,11 +91,27 @@ static int py_dom_sid_cmp(PyObject *py_self, PyObject *py_other)
 	return 0;
 }
 
+static PyObject* py_dom_sid_richcmp(PyObject *obj1, PyObject *obj2, int op)
+{
+	int result = py_dom_sid_cmp(obj1, obj2);
+	
+	switch (op) {
+		case Py_EQ: return PyBool_FromLong(result == 0);
+		case Py_NE: return PyBool_FromLong(result != 0);
+		case Py_LT: return PyBool_FromLong(result < 0);
+		case Py_GT: return PyBool_FromLong(result > 0);
+		case Py_LE: return PyBool_FromLong(result <= 0);
+		case Py_GE: return PyBool_FromLong(result >= 0);
+	}
+	Py_INCREF(Py_NotImplemented);
+	return Py_NotImplemented;
+}
+
 static PyObject *py_dom_sid_str(PyObject *py_self)
 {
 	struct dom_sid *self = pytalloc_get_ptr(py_self);
 	char *str = dom_sid_string(NULL, self);
-	PyObject *ret = PyString_FromString(str);
+	PyObject *ret = PyStr_FromString(str);
 	talloc_free(str);
 	return ret;
 }
@@ -96,7 +120,7 @@ static PyObject *py_dom_sid_repr(PyObject *py_self)
 {
 	struct dom_sid *self = pytalloc_get_ptr(py_self);
 	char *str = dom_sid_string(NULL, self);
-	PyObject *ret = PyString_FromFormat("dom_sid('%s')", str);
+	PyObject *ret = PyStr_FromFormat("dom_sid('%s')", str);
 	talloc_free(str);
 	return ret;
 }
@@ -131,7 +155,10 @@ static void py_dom_sid_patch(PyTypeObject *type)
 	type->tp_init = py_dom_sid_init;
 	type->tp_str = py_dom_sid_str;
 	type->tp_repr = py_dom_sid_repr;
+	type->tp_richcompare = py_dom_sid_richcmp;
+#if PY_MAJOR_VERSION < 3
 	type->tp_compare = py_dom_sid_cmp;
+#endif
 	PyType_AddMethods(type, py_dom_sid_extra_methods);
 }
 
@@ -246,7 +273,7 @@ static PyObject *py_descriptor_as_sddl(PyObject *self, PyObject *args)
 
 	text = sddl_encode(NULL, desc, sid);
 
-	ret = PyString_FromString(text);
+	ret = PyStr_FromString(text);
 
 	talloc_free(text);
 
@@ -395,7 +422,7 @@ static PyObject *py_privilege_name(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "i", &priv))
 		return NULL;
 
-	return PyString_FromString(sec_privilege_name(priv));
+	return PyStr_FromString(sec_privilege_name(priv));
 }
 
 static PyObject *py_privilege_id(PyObject *self, PyObject *args)
