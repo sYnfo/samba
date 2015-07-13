@@ -22,7 +22,11 @@
 #include "policy.h"
 #include "libcli/util/pyerrors.h"
 
-void initpolicy(void);
+#if PY_MAJOR_VERSION >= 3
+#define PyStr_FromString PyUnicode_FromString
+#else
+#define PyStr_FromString PyString_FromString
+#endif
 
 static PyObject *py_get_gpo_flags(PyObject *self, PyObject *args)
 {
@@ -51,7 +55,7 @@ static PyObject *py_get_gpo_flags(PyObject *self, PyObject *args)
 
 	py_ret = PyList_New(0);
 	for (i = 0; ret[i]; i++) {
-		PyObject *item = PyString_FromString(ret[i]);
+		PyObject *item = PyStr_FromString(ret[i]);
 		if (item == NULL) {
 			talloc_free(mem_ctx);
 			Py_DECREF(py_ret);
@@ -93,7 +97,7 @@ static PyObject *py_get_gplink_options(PyObject *self, PyObject *args)
 
 	py_ret = PyList_New(0);
 	for (i = 0; ret[i]; i++) {
-		PyObject *item = PyString_FromString(ret[i]);
+		PyObject *item = PyStr_FromString(ret[i]);
 		if (item == NULL) {
 			talloc_free(mem_ctx);
 			Py_DECREF(py_ret);
@@ -131,20 +135,47 @@ static PyMethodDef py_policy_methods[] = {
 	{ NULL }
 };
 
-void initpolicy(void)
+#define MODULE_DOC "(Group) Policy manipulation"
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+	PyModuleDef_HEAD_INIT,
+	.m_name = "policy",
+	.m_doc = MODULE_DOC,
+	.m_size = -1,
+	.m_methods = py_policy_methods,
+};
+#endif
+
+static PyObject* module_init(void)
 {
 	PyObject *m;
 
-	m = Py_InitModule3("policy", py_policy_methods, "(Group) Policy manipulation");
+#if PY_MAJOR_VERSION >= 3
+	m = PyModule_Create(&moduledef);
+#else
+	m = Py_InitModule3("policy", py_policy_methods, MODULE_DOC);
+#endif
 	if (!m)
-		return;
+		return NULL;
 
-	PyModule_AddObject(m, "GPO_FLAG_USER_DISABLE",
-					   PyInt_FromLong(GPO_FLAG_USER_DISABLE));
-	PyModule_AddObject(m, "GPO_MACHINE_USER_DISABLE",
-					   PyInt_FromLong(GPO_FLAG_MACHINE_DISABLE));
-	PyModule_AddObject(m, "GPLINK_OPT_DISABLE",
-					   PyInt_FromLong(GPLINK_OPT_DISABLE ));
-	PyModule_AddObject(m, "GPLINK_OPT_ENFORCE ",
-					   PyInt_FromLong(GPLINK_OPT_ENFORCE ));
+	PyModule_AddIntConstant(m, "GPO_FLAG_USER_DISABLE", GPO_FLAG_USER_DISABLE);
+	PyModule_AddIntConstant(m, "GPO_MACHINE_USER_DISABLE", GPO_FLAG_MACHINE_DISABLE);
+	PyModule_AddIntConstant(m, "GPLINK_OPT_DISABLE", GPLINK_OPT_DISABLE);
+	PyModule_AddIntConstant(m, "GPLINK_OPT_ENFORCE ", GPLINK_OPT_ENFORCE);
+	return m;
 }
+
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit_policy(void);
+PyMODINIT_FUNC PyInit_policy(void)
+{
+    return module_init();
+}
+#else
+void initpolicy(void);
+void initpolicy(void)
+{
+    module_init();
+}
+#endif
