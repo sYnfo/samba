@@ -24,12 +24,16 @@
 #include <pytalloc.h>
 #include "dynconfig/dynconfig.h"
 
-void initparam(void);
-
-/* There's no Py_ssize_t in 2.4, apparently */
-#if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION < 5
-typedef int Py_ssize_t;
-typedef inquiry lenfunc;
+#if PY_MAJOR_VERSION >= 3
+#define PyStr_Check PyUnicode_Check
+#define PyStr_FromString PyUnicode_FromString
+#define PyStr_FromFormat PyUnicode_FromFormat
+#define PyStr_AsString PyUnicode_AsUTF8
+#else
+#define PyStr_Check PyString_Check
+#define PyStr_FromString PyString_FromString
+#define PyStr_FromFormat PyString_FromFormat
+#define PyStr_AsString PyString_AsString
 #endif
 
 #define PyLoadparmContext_AsLoadparmContext(obj) pytalloc_get_type(obj, struct loadparm_context)
@@ -64,13 +68,13 @@ static PyObject *py_lp_ctx_get_helper(struct loadparm_context *lp_ctx, const cha
 			const char *option = strchr(param_name, ':') + 1;
 			const char *value;
 			if (type == NULL || option == NULL) {
-			return NULL;
+				return NULL;
 			}
 			value = lpcfg_get_parametric(lp_ctx, service, type, option);
 			if (value == NULL) {
-			return NULL;
+				return NULL;
 			}
-			return PyString_FromString(value);
+			return PyStr_FromString(value);
 		}
 
 		parm = lpcfg_parm_struct(lp_ctx, param_name);
@@ -90,7 +94,7 @@ static PyObject *py_lp_ctx_get_helper(struct loadparm_context *lp_ctx, const cha
 		value = lpcfg_get_parametric(lp_ctx, NULL, type, option);
 		if (value == NULL)
 			return NULL;
-		return PyString_FromString(value);
+		return PyStr_FromString(value);
 	} else {
 		/* its a global parameter */
 		parm = lpcfg_parm_struct(lp_ctx, param_name);
@@ -106,11 +110,13 @@ static PyObject *py_lp_ctx_get_helper(struct loadparm_context *lp_ctx, const cha
 
     /* construct and return the right type of python object */
     switch (parm->type) {
+#if PY_MAJOR_VERSION < 3  /* TODO - is this byte or ASCII? */
     case P_CHAR:
 	return PyString_FromFormat("%c", *(char *)parm_ptr);
+#endif
     case P_STRING:
     case P_USTRING:
-	return PyString_FromString(*(char **)parm_ptr);
+	return PyStr_FromString(*(char **)parm_ptr);
     case P_BOOL:
 	return PyBool_FromLong(*(bool *)parm_ptr);
     case P_BOOLREV:
@@ -122,7 +128,7 @@ static PyObject *py_lp_ctx_get_helper(struct loadparm_context *lp_ctx, const cha
     case P_ENUM:
 	for (i=0; parm->enum_list[i].name; i++) {
 	    if (*(int *)parm_ptr == parm->enum_list[i].value) {
-		return PyString_FromString(parm->enum_list[i].name);
+		return PyStr_FromString(parm->enum_list[i].name);
 	    }
 	}
 	return NULL;
@@ -140,7 +146,7 @@ static PyObject *py_lp_ctx_get_helper(struct loadparm_context *lp_ctx, const cha
 		pylist = PyList_New(str_list_length(strlist));
 	    for (j = 0; strlist[j]; j++) 
 		PyList_SetItem(pylist, j, 
-			       PyString_FromString(strlist[j]));
+			       PyStr_FromString(strlist[j]));
 	    return pylist;
 	}
     }
@@ -232,7 +238,7 @@ static PyObject *py_lp_ctx_private_path(pytalloc_Object *self, PyObject *args)
 		return NULL;
 
 	path = lpcfg_private_path(NULL, PyLoadparmContext_AsLoadparmContext(self), name);
-	ret = PyString_FromString(path);
+	ret = PyStr_FromString(path);
 	talloc_free(path);
 
 	return ret;
@@ -247,7 +253,7 @@ static PyObject *py_lp_ctx_services(pytalloc_Object *self)
 	for (i = 0; i < lpcfg_numservices(lp_ctx); i++) {
 		struct loadparm_service *service = lpcfg_servicebynum(lp_ctx, i);
 		if (service != NULL) {
-			PyList_SetItem(ret, i, PyString_FromString(lpcfg_servicename(service)));
+			PyList_SetItem(ret, i, PyStr_FromString(lpcfg_servicename(service)));
 		}
 	}
 	return ret;
@@ -262,8 +268,44 @@ static PyObject *py_lp_ctx_server_role(pytalloc_Object *self)
 	role = lpcfg_server_role(lp_ctx);
 	role_str = server_role_str(role);
 
-	return PyString_FromString(role_str);
+	return PyStr_FromString(role_str);
 }
+
+#if PY_MAJOR_VERSION >= 3
+/* Return a Python file object's underlying file descriptor.
+ * Only works on file PyObjects with a fileno() method.
+ *
+ * Always opens the file for writing (so it is not a general
+ * replacement for Python 2's PyFile_AsFile).
+ *
+ * All C-level writes to the file should be done before additional
+ * Python-level writes are allowed.
+ */
+static FILE* PyFile_AsFile(PyObject *py_file) {
+	FILE *f;
+	PyObject *ret;
+	int fd;
+
+	ret = PyObject_CallMethod(py_file, "flush", "");
+	if (ret == NULL) {
+		return NULL;
+	}
+	Py_DECREF(ret);
+
+	fd = PyObject_AsFileDescriptor(py_file);
+	if (fd == -1) {
+		return NULL;
+	}
+
+	f = fdopen(fd, "w");
+	if (f == NULL) {
+		PyErr_SetFromErrno(PyExc_OSError);
+		return NULL;
+	}
+
+	return f;
+}
+#endif
 
 static PyObject *py_lp_dump(PyObject *self, PyObject *args)
 {
@@ -325,13 +367,12 @@ static PyObject *py_lp_dump_a_parameter(PyObject *self, PyObject *args)
 	}
 
 	Py_RETURN_NONE;
-
 }
 
 static PyObject *py_samdb_url(PyObject *self)
 {
 	struct loadparm_context *lp_ctx = PyLoadparmContext_AsLoadparmContext(self);
-	return PyString_FromFormat("tdb://%s/sam.ldb", lpcfg_private_dir(lp_ctx));
+	return PyStr_FromFormat("tdb://%s/sam.ldb", lpcfg_private_dir(lp_ctx));
 }
 
 
@@ -382,7 +423,7 @@ static PyObject *py_lp_ctx_config_file(pytalloc_Object *self, void *closure)
 	if (configfile == NULL)
 		Py_RETURN_NONE;
 	else
-		return PyString_FromString(configfile);
+		return PyStr_FromString(configfile);
 }
 
 static PyGetSetDef py_lp_ctx_getset[] = {
@@ -420,11 +461,11 @@ static Py_ssize_t py_lp_ctx_len(pytalloc_Object *self)
 static PyObject *py_lp_ctx_getitem(pytalloc_Object *self, PyObject *name)
 {
 	struct loadparm_service *service;
-	if (!PyString_Check(name)) {
+	if (!PyStr_Check(name)) {
 		PyErr_SetString(PyExc_TypeError, "Only string subscripts are supported");
 		return NULL;
 	}
-	service = lpcfg_service(PyLoadparmContext_AsLoadparmContext(self), PyString_AsString(name));
+	service = lpcfg_service(PyLoadparmContext_AsLoadparmContext(self), PyStr_AsString(name));
 	if (service == NULL) {
 		PyErr_SetString(PyExc_KeyError, "No such section");
 		return NULL;
@@ -492,27 +533,27 @@ PyTypeObject PyLoadparmService = {
 
 static PyObject *py_default_path(PyObject *self)
 {
-	return PyString_FromString(lp_default_path());
+	return PyStr_FromString(lp_default_path());
 }
 
 static PyObject *py_setup_dir(PyObject *self)
 {
-	return PyString_FromString(dyn_SETUPDIR);
+	return PyStr_FromString(dyn_SETUPDIR);
 }
 
 static PyObject *py_modules_dir(PyObject *self)
 {
-	return PyString_FromString(dyn_MODULESDIR);
+	return PyStr_FromString(dyn_MODULESDIR);
 }
 
 static PyObject *py_bin_dir(PyObject *self)
 {
-	return PyString_FromString(dyn_BINDIR);
+	return PyStr_FromString(dyn_BINDIR);
 }
 
 static PyObject *py_sbin_dir(PyObject *self)
 {
-	return PyString_FromString(dyn_SBINDIR);
+	return PyStr_FromString(dyn_SBINDIR);
 }
 
 static PyMethodDef pyparam_methods[] = {
@@ -529,26 +570,57 @@ static PyMethodDef pyparam_methods[] = {
 	{ NULL }
 };
 
-void initparam(void)
+#define MODULE_DOC "Parsing and writing Samba configuration files."
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+	PyModuleDef_HEAD_INIT,
+	.m_name = "param",
+	.m_doc = MODULE_DOC,
+	.m_size = -1,
+	.m_methods = pyparam_methods,
+};
+#endif
+
+static PyObject* module_init(void)
 {
 	PyObject *m;
 	PyTypeObject *talloc_type = pytalloc_GetObjectType();
 	if (talloc_type == NULL)
-		return;
+		return NULL;
 
 	PyLoadparmContext.tp_base = talloc_type;
 	PyLoadparmService.tp_base = talloc_type;
 
 	if (PyType_Ready(&PyLoadparmContext) < 0)
-		return;
+		return NULL;
 
 	if (PyType_Ready(&PyLoadparmService) < 0)
-		return;
+		return NULL;
 
-	m = Py_InitModule3("param", pyparam_methods, "Parsing and writing Samba configuration files.");
+#if PY_MAJOR_VERSION >= 3
+	m = PyModule_Create(&moduledef);
+#else
+	m = Py_InitModule3("param", pyparam_methods, MODULE_DOC);
+#endif
 	if (m == NULL)
-		return;
+		return NULL;
 
 	Py_INCREF(&PyLoadparmContext);
 	PyModule_AddObject(m, "LoadParm", (PyObject *)&PyLoadparmContext);
+	return m;
 }
+
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit_param(void);
+PyMODINIT_FUNC PyInit_param(void)
+{
+    return module_init();
+}
+#else
+void initparam(void);
+void initparam(void)
+{
+    module_init();
+}
+#endif
