@@ -572,7 +572,7 @@ static void py_cli_state_dealloc(struct py_cli_state *self)
 		cli_shutdown(self->cli);
 		self->cli = NULL;
 	}
-	self->ob_type->tp_free((PyObject *)self);
+	Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
 static PyObject *py_cli_create(struct py_cli_state *self, PyObject *args,
@@ -871,7 +871,7 @@ static PyMethodDef py_cli_state_methods[] = {
 };
 
 static PyTypeObject py_cli_state_type = {
-	PyObject_HEAD_INIT(NULL)
+	PyVarObject_HEAD_INIT(NULL, 0)
 	.tp_name = "libsmb_samba_internal.Conn",
 	.tp_basicsize = sizeof(struct py_cli_state),
 	.tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
@@ -886,19 +886,48 @@ static PyMethodDef py_libsmb_methods[] = {
 	{ NULL },
 };
 
-void initlibsmb_samba_internal(void);
-void initlibsmb_samba_internal(void)
+#define MODULE_DOC "libsmb wrapper"
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+	PyModuleDef_HEAD_INIT,
+	.m_name = "libsmb_samba_internal",
+	.m_doc = MODULE_DOC,
+	.m_size = -1,
+	.m_methods = py_libsmb_methods,
+};
+#endif
+
+static PyObject* module_init(void)
 {
 	PyObject *m;
 
 	talloc_stackframe();
 
-	m = Py_InitModule3("libsmb_samba_internal", py_libsmb_methods,
-			   "libsmb wrapper");
+#if PY_MAJOR_VERSION >= 3
+	m = PyModule_Create(&moduledef);
+#else
+	m = Py_InitModule3("libsmb_samba_internal", py_libsmb_methods, MODULE_DOC);
+#endif
 
 	if (PyType_Ready(&py_cli_state_type) < 0) {
-		return;
+		return NULL;
 	}
 	Py_INCREF(&py_cli_state_type);
 	PyModule_AddObject(m, "Conn", (PyObject *)&py_cli_state_type);
+	return m;
 }
+
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit_libsmb_samba_internal(void);
+PyMODINIT_FUNC PyInit_libsmb_samba_internal(void)
+{
+    return module_init();
+}
+#else
+void initlibsmb_samba_internal(void);
+void initlibsmb_samba_internal(void)
+{
+    module_init();
+}
+#endif

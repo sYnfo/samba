@@ -1476,17 +1476,18 @@ bld.SAMBA3_BINARY('vlp',
                  param''',
                  install=False)
 
-bld.SAMBA3_PYTHON('pysmbd',
-                  source='smbd/pysmbd.c',
-                  deps='smbd_base pyrpc_util',
-                  realname='samba/samba3/smbd.so'
-                  )
+for env in bld.gen_python_environments():
+    bld.SAMBA3_PYTHON('pysmbd',
+                      source='smbd/pysmbd.c',
+                      deps='smbd_base pyrpc_util',
+                      realname='samba/samba3/smbd.so'
+                      )
 
-bld.SAMBA3_PYTHON('pylibsmb',
-                  source='libsmb/pylibsmb.c',
-                  deps='smbclient samba-credentials',
-                  realname='samba/samba3/libsmb_samba_internal.so'
-                  )
+    bld.SAMBA3_PYTHON('pylibsmb',
+                      source='libsmb/pylibsmb.c',
+                      deps='smbclient samba-credentials',
+                      realname='samba/samba3/libsmb_samba_internal.so'
+                      )
 
 bld.SAMBA3_BINARY('samba-regedit',
                   source="""utils/regedit.c utils/regedit_samba3.c

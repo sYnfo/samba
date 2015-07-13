@@ -651,14 +651,37 @@ static PyMethodDef py_smbd_methods[] = {
 	{ NULL }
 };
 
+#define MODULE_DOC "Python bindings for the smbd file server."
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+	PyModuleDef_HEAD_INIT,
+	.m_name = "smbd",
+	.m_doc = MODULE_DOC,
+	.m_size = -1,
+	.m_methods = py_smbd_methods,
+};
+#endif
+
+static PyObject* module_init(void)
+{
+#if PY_MAJOR_VERSION >= 3
+	return PyModule_Create(&moduledef);
+#else
+	return Py_InitModule3("smbd", py_smbd_methods, MODULE_DOC);
+#endif
+}
+
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit_smbd(void);
+PyMODINIT_FUNC PyInit_smbd(void)
+{
+    return module_init();
+}
+#else
 void initsmbd(void);
 void initsmbd(void)
 {
-	PyObject *m;
-
-	m = Py_InitModule3("smbd", py_smbd_methods,
-			   "Python bindings for the smbd file server.");
-	if (m == NULL)
-		return;
-
+    module_init();
 }
+#endif
