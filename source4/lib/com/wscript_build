@@ -27,9 +27,10 @@ bld.SAMBA_MODULE('com_simple',
 	)
 
 
-bld.SAMBA_PYTHON('pycom',
-	source='pycom.c',
-	deps='COM',
-	realname='samba/com.so',
-	)
+for env in bld.gen_python_environments():
+	bld.SAMBA_PYTHON('pycom',
+		source='pycom.c',
+		deps='COM',
+		realname='samba/com.so',
+		)
 

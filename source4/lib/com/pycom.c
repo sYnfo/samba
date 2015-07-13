@@ -23,8 +23,6 @@
 #include "librpc/ndr/libndr.h"
 #include "libcli/util/pyerrors.h"
 
-void initcom(void);
-
 static struct com_context *py_com_ctx = NULL; /* FIXME: evil global */
 
 static PyObject *py_get_class_object(PyObject *self, PyObject *args)
@@ -66,18 +64,45 @@ static struct PyMethodDef com_methods[] = {
 	{ NULL },
 };
 
-void initcom(void)
+#define MODULE_DOC "Simple COM implementation"
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+	PyModuleDef_HEAD_INIT,
+	.m_name = "com",
+	.m_doc = MODULE_DOC,
+	.m_size = -1,
+	.m_methods = com_methods,
+};
+#endif
+
+static PyObject* module_init(void)
 {
-	PyObject *m;
 	WERROR error;
 
 	error = com_init_ctx(&py_com_ctx, NULL);
 	if (!W_ERROR_IS_OK(error)) {
 		PyErr_FromWERROR(error);
-		return;
+		return NULL;
 	}
 
-	m = Py_InitModule3("com", com_methods, "Simple COM implementation");
-	if (m == NULL)
-		return;
+#if PY_MAJOR_VERSION >= 3
+	return PyModule_Create(&moduledef);
+#else
+	return Py_InitModule3("com", com_methods, MODULE_DOC);
+#endif
 }
+
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit_com(void);
+PyMODINIT_FUNC PyInit_com(void)
+{
+    return module_init();
+}
+#else
+void initcom(void);
+void initcom(void)
+{
+    module_init();
+}
+#endif
