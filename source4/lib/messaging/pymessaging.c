@@ -35,8 +35,6 @@
 #include "librpc/gen_ndr/server_id.h"
 #include <pytalloc.h>
 
-void initmessaging(void);
-
 extern PyTypeObject imessaging_Type;
 
 static bool server_id_from_py(PyObject *object, struct server_id *server_id)
@@ -374,7 +372,7 @@ static PyGetSetDef py_imessaging_getset[] = {
 
 
 PyTypeObject imessaging_Type = {
-	PyObject_HEAD_INIT(NULL) 0,
+	PyVarObject_HEAD_INIT(NULL, 0)
 	.tp_name = "messaging.Messaging",
 	.tp_basicsize = sizeof(imessaging_Object),
 	.tp_flags = Py_TPFLAGS_DEFAULT|Py_TPFLAGS_BASETYPE,
@@ -386,17 +384,47 @@ PyTypeObject imessaging_Type = {
 		  "Create a new object that can be used to communicate with the peers in the specified messaging path.\n"
 };
 
-void initmessaging(void)
+#define MODULE_DOC "Internal RPC"
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+	PyModuleDef_HEAD_INIT,
+	.m_name = "messaging",
+	.m_doc = MODULE_DOC,
+	.m_size = -1,
+};
+#endif
+
+static PyObject* module_init(void)
 {
 	PyObject *mod;
 
 	if (PyType_Ready(&imessaging_Type) < 0)
-		return;
+		return NULL;
 
-	mod = Py_InitModule3("messaging", NULL, "Internal RPC");
+#if PY_MAJOR_VERSION >= 3
+	mod = PyModule_Create(&moduledef);
+#else
+	mod = Py_InitModule3("messaging", NULL, MODULE_DOC);
+#endif
 	if (mod == NULL)
-		return;
+		return NULL;
 
 	Py_INCREF((PyObject *)&imessaging_Type);
 	PyModule_AddObject(mod, "Messaging", (PyObject *)&imessaging_Type);
+	return mod;
 }
+
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit_messaging(void);
+PyMODINIT_FUNC PyInit_messaging(void)
+{
+    return module_init();
+}
+#else
+void initmessaging(void);
+void initmessaging(void)
+{
+    module_init();
+}
+#endif
