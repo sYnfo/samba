@@ -25,8 +25,6 @@
 
 static PyTypeObject *loadparm_Type = NULL;
 
-void initparam(void);
-
 static PyObject *py_get_context(PyObject *self)
 {
 	PyObject *py_loadparm;
@@ -66,22 +64,55 @@ static PyMethodDef pyparam_methods[] = {
     { NULL }
 };
 
-void initparam(void)
+#define MODULE_DOC "Parsing and writing Samba3 configuration files."
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+	PyModuleDef_HEAD_INIT,
+	.m_name = "param",
+	.m_doc = MODULE_DOC,
+	.m_size = -1,
+	.m_methods = pyparam_methods,
+};
+#endif
+
+static PyObject* module_init(void)
 {
 	PyObject *m, *mod;
 
-	m = Py_InitModule3("param", pyparam_methods, "Parsing and writing Samba3 configuration files.");
+#if PY_MAJOR_VERSION >= 3
+	m = PyModule_Create(&moduledef);
+#else
+	m = Py_InitModule3("param", pyparam_methods, MODULE_DOC);
+#endif
 	if (m == NULL)
-		return;
+		return NULL;
 
 	mod = PyImport_ImportModule("samba.param");
 	if (mod == NULL) {
-		return;
+		Py_DECREF(m);
+		return NULL;
 	}
 
 	loadparm_Type = (PyTypeObject *)PyObject_GetAttrString(mod, "LoadParm");
 	Py_DECREF(mod);
 	if (loadparm_Type == NULL) {
-		return;
+		Py_DECREF(m);
+		return NULL;
 	}
+	return m;
 }
+
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit_param(void);
+PyMODINIT_FUNC PyInit_param(void)
+{
+    return module_init();
+}
+#else
+void initparam(void);
+void initparam(void)
+{
+    module_init();
+}
+#endif
