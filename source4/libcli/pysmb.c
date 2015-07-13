@@ -40,7 +40,12 @@
 
 static PyTypeObject PySMB;
 
-void initsmb(void);
+#if PY_MAJOR_VERSION >= 3
+#define PyStr_FromString PyUnicode_FromString
+#define PyInt_FromLong PyLong_FromLong
+#else
+#define PyStr_FromString PyString_FromString
+#endif
 
 struct smb_private_data {
 	struct loadparm_context *lp_ctx;
@@ -159,11 +164,11 @@ static void py_smb_list_callback(struct clilist_file_info *f, const char *mask, 
 
 		dict = PyDict_New();
 		if(dict) {
-			PyDict_SetItemString(dict, "name", PyString_FromString(f->name));
+			PyDict_SetItemString(dict, "name", PyStr_FromString(f->name));
 			
 			/* Windows does not always return short_name */
 			if (f->short_name) {
-				PyDict_SetItemString(dict, "short_name", PyString_FromString(f->short_name));
+				PyDict_SetItemString(dict, "short_name", PyStr_FromString(f->short_name));
 			} else {
 				PyDict_SetItemString(dict, "short_name", Py_None);
 			}
@@ -635,29 +640,44 @@ static PyTypeObject PySMB = {
 
 };
 
-void initsmb(void)
+#define MODULE_DOC "SMB File I/O support"
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+	PyModuleDef_HEAD_INIT,
+	.m_name = "smb",
+	.m_doc = MODULE_DOC,
+	.m_size = -1,
+};
+#endif
+
+static PyObject* module_init(void)
 {
 	PyObject *m;
 	PyTypeObject *talloc_type = pytalloc_GetObjectType();
 	if (talloc_type == NULL) {
-		return;
+		return NULL;
 	}
 
 	PySMB.tp_base = talloc_type;
 
 	if (PyType_Ready(&PySMB) < 0) {
-		return;
+		return NULL;
 	}
 
-	m = Py_InitModule3("smb", NULL, "SMB File I/O support");
+#if PY_MAJOR_VERSION >= 3
+	m = PyModule_Create(&moduledef);
+#else
+	m = Py_InitModule3("smb", NULL, MODULE_DOC);
+#endif
 	if (m == NULL) {
-	    return;
+	    return NULL;
 	}
 
 	Py_INCREF(&PySMB);
 	PyModule_AddObject(m, "SMB", (PyObject *)&PySMB);
 
-#define ADD_FLAGS(val)	PyModule_AddObject(m, #val, PyInt_FromLong(val))
+#define ADD_FLAGS(val)	PyModule_AddIntConstant(m, #val, val)
 
 	ADD_FLAGS(FILE_ATTRIBUTE_READONLY);
 	ADD_FLAGS(FILE_ATTRIBUTE_HIDDEN);
@@ -675,4 +695,19 @@ void initsmb(void)
 	ADD_FLAGS(FILE_ATTRIBUTE_NONINDEXED);
 	ADD_FLAGS(FILE_ATTRIBUTE_ENCRYPTED);
 	ADD_FLAGS(FILE_ATTRIBUTE_ALL_MASK);
+	return m;
 }
+
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit_smb(void);
+PyMODINIT_FUNC PyInit_smb(void)
+{
+	return module_init();
+}
+#else
+void initsmb(void);
+void initsmb(void)
+{
+	module_init();
+}
+#endif
