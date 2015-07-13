@@ -31,6 +31,12 @@
 #include "lib/messaging/messaging.h"
 #include "lib/messaging/irpc.h"
 
+#if PY_MAJOR_VERSION >= 3
+#define PyStr_FromString PyUnicode_FromString
+#else
+#define PyStr_FromString PyString_FromString
+#endif
+
 bool py_check_dcerpc_type(PyObject *obj, const char *module, const char *type_name)
 {
 	PyObject *mod;
@@ -373,10 +379,16 @@ PyObject *py_return_ndr_struct(const char *module_name, const char *type_name,
 	return pytalloc_reference_ex(py_type, r_ctx, r);
 }
 
-PyObject *PyString_FromStringOrNULL(const char *str)
+PyObject *PyStr_FromStringOrNULL(const char *str)
 {
 	if (str == NULL) {
 		Py_RETURN_NONE;
 	}
-	return PyString_FromString(str);
+	return PyStr_FromString(str);
 }
+
+#if PY_MAJOR_VERSION < 3
+PyObject *PyString_FromStringOrNULL(const char *str) {
+	return PyStr_FromStringOrNULL(str);
+}
+#endif
