@@ -272,7 +272,7 @@ sub PythonStruct($$$$$$)
 		$self->deindent;
 		$self->pidl("}");
 		$self->pidl("");
-		$self->pidl("return PyString_FromStringAndSize((char *)blob.data, blob.length);");
+		$self->pidl("return PyBytes_FromStringAndSize((char *)blob.data, blob.length);");
 		$self->deindent;
 		$self->pidl("}");
 		$self->pidl("");
@@ -335,7 +335,7 @@ sub PythonStruct($$$$$$)
 		$self->pidl("char *retstr;");
 		$self->pidl("");
 		$self->pidl("retstr = ndr_print_struct_string(pytalloc_get_mem_ctx(py_obj), (ndr_print_fn_t)ndr_print_$name, \"$name\", object);");
-		$self->pidl("ret = PyString_FromString(retstr);");
+		$self->pidl("ret = PyStr_FromString(retstr);");
 		$self->pidl("talloc_free(retstr);");
 		$self->pidl("");
 		$self->pidl("return ret;");
@@ -361,7 +361,7 @@ sub PythonStruct($$$$$$)
 	my $typeobject = "$name\_Type";
 	$self->pidl("static PyTypeObject $typeobject = {");
 	$self->indent;
-	$self->pidl("PyObject_HEAD_INIT(NULL) 0,");
+	$self->pidl("PyVarObject_HEAD_INIT(NULL, 0)");
 	$self->pidl(".tp_name = \"$modulename.$prettyname\",");
 	$self->pidl(".tp_getset = $getsetters,");
 	if ($docstring) {
@@ -761,7 +761,7 @@ sub Interface($$$)
 
 		$self->pidl("static PyTypeObject $if_typename = {");
 		$self->indent;
-		$self->pidl("PyObject_HEAD_INIT(NULL) 0,");
+		$self->pidl("PyVarObject_HEAD_INIT(NULL, 0)");
 		$self->pidl(".tp_name = \"$basename.$interface->{NAME}\",");
 		$self->pidl(".tp_basicsize = sizeof(dcerpc_InterfaceObject),");
 		$self->pidl(".tp_doc = $docstring,");
@@ -775,7 +775,7 @@ sub Interface($$$)
 		$self->register_module_typeobject($interface->{NAME}, "&$if_typename");
 		my $dcerpc_typename = $self->import_type_variable("samba.dcerpc.base", "ClientConnection");
 		$self->register_module_prereadycode(["$if_typename.tp_base = $dcerpc_typename;", ""]);
-		$self->register_module_postreadycode(["if (!PyInterface_AddNdrRpcMethods(&$if_typename, py_ndr_$interface->{NAME}\_methods))", "\treturn;", ""]);
+		$self->register_module_postreadycode(["if (!PyInterface_AddNdrRpcMethods(&$if_typename, py_ndr_$interface->{NAME}\_methods))", "\treturn NULL;", ""]);
 
 
 		$self->pidl("static PyObject *syntax_$interface->{NAME}_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)");
@@ -801,7 +801,7 @@ sub Interface($$$)
 
 		$self->pidl("static PyTypeObject $syntax_typename = {");
 		$self->indent;
-		$self->pidl("PyObject_HEAD_INIT(NULL) 0,");
+		$self->pidl("PyVarObject_HEAD_INIT(NULL, 0)");
 		$self->pidl(".tp_name = \"$basename.$interface->{NAME}\",");
 		$self->pidl(".tp_basicsize = sizeof(pytalloc_Object),");
 		$self->pidl(".tp_doc = $docstring,");
@@ -1089,38 +1089,38 @@ sub ConvertObjectFromPythonData($$$$$$;$)
 	}
 
 	if ($actual_ctype->{TYPE} eq "SCALAR" and $actual_ctype->{NAME} eq "DATA_BLOB") {
-		$self->pidl("$target = data_blob_talloc($mem_ctx, PyString_AS_STRING($cvar), PyString_GET_SIZE($cvar));");
+		$self->pidl("$target = data_blob_talloc($mem_ctx, PyBytes_AS_STRING($cvar), PyBytes_GET_SIZE($cvar));");
 		return;
 	}
 
 	if ($actual_ctype->{TYPE} eq "SCALAR" and
 		($actual_ctype->{NAME} eq "string" or $actual_ctype->{NAME} eq "nbt_string" or $actual_ctype->{NAME} eq "nbt_name" or $actual_ctype->{NAME} eq "wrepl_nbt_name")) {
-		$self->pidl("$target = talloc_strdup($mem_ctx, PyString_AS_STRING($cvar));");
+		$self->pidl("$target = talloc_strdup($mem_ctx, PyStr_AsUTF8($cvar));");
 		return;
 	}
 
 	if ($actual_ctype->{TYPE} eq "SCALAR" and ($actual_ctype->{NAME} eq "dns_string" or $actual_ctype->{NAME} eq "dns_name")) {
-		$self->pidl("$target = talloc_strdup($mem_ctx, PyString_AS_STRING($cvar));");
+		$self->pidl("$target = talloc_strdup($mem_ctx, PyStr_AsUTF8($cvar));");
 		return;
 	}
 
 	if ($actual_ctype->{TYPE} eq "SCALAR" and $actual_ctype->{NAME} eq "ipv4address") {
-		$self->pidl("$target = PyString_AS_STRING($cvar);");
+		$self->pidl("$target = PyStr_AsUTF8($cvar);");
 		return;
 	}
 
 	if ($actual_ctype->{TYPE} eq "SCALAR" and $actual_ctype->{NAME} eq "ipv6address") {
-		$self->pidl("$target = PyString_AsString($cvar);");
+		$self->pidl("$target = PyStr_AsUTF8($cvar);");
 		return;
 	}
 
 	if ($actual_ctype->{TYPE} eq "SCALAR" and $actual_ctype->{NAME} eq "dnsp_name") {
-		$self->pidl("$target = PyString_AS_STRING($cvar);");
+		$self->pidl("$target = PyStr_AsUTF8($cvar);");
 		return;
 	}
 
 	if ($actual_ctype->{TYPE} eq "SCALAR" and $actual_ctype->{NAME} eq "dnsp_string") {
-		$self->pidl("$target = PyString_AS_STRING($cvar);");
+		$self->pidl("$target = PyStr_AsUTF8($cvar);");
 		return;
 	}
 
@@ -1140,12 +1140,20 @@ sub ConvertObjectFromPythonData($$$$$$;$)
 	}
 
 	if ($actual_ctype->{TYPE} eq "SCALAR" and $actual_ctype->{NAME} eq "string_array") {
+		$self->pidl("#if PY_MAJOR_VERSION >= 3");
+		$self->pidl("$target = PyCapsule_GetPointer($cvar, \"samba._pidl_capsule\");");
+		$self->pidl("#else");
 		$self->pidl("$target = PyCObject_AsVoidPtr($cvar);");
+		$self->pidl("#endif");
 		return;
 	}
 
 	if ($actual_ctype->{TYPE} eq "SCALAR" and $actual_ctype->{NAME} eq "pointer") {
+		$self->pidl("#if PY_MAJOR_VERSION >= 3");
+        $self->pidl("$target = PyCapsule_GetPointer($cvar, \"samba._pidl_capsule\");");
+		$self->pidl("#else");
 		$self->assign($target, "PyCObject_AsVoidPtr($cvar)");
+		$self->pidl("#endif");
 		return;
 	}
 
@@ -1201,15 +1209,15 @@ sub ConvertObjectFromPythonLevel($$$$$$$$)
 			$self->pidl("if (PyUnicode_Check($py_var)) {");
 			$self->indent;
 			# FIXME: Use Unix charset setting rather than utf-8
-			$self->pidl($var_name . " = PyString_AS_STRING(PyUnicode_AsEncodedString($py_var, \"utf-8\", \"ignore\"));");
+			$self->pidl($var_name . " = PyBytes_AS_STRING(PyUnicode_AsEncodedString($py_var, \"utf-8\", \"ignore\"));");
 			$self->deindent;
-			$self->pidl("} else if (PyString_Check($py_var)) {");
+			$self->pidl("} else if (PyBytes_Check($py_var)) {");
 			$self->indent;
-			$self->pidl($var_name . " = PyString_AS_STRING($py_var);");
+			$self->pidl($var_name . " = PyBytes_AS_STRING($py_var);");
 			$self->deindent;
 			$self->pidl("} else {");
 			$self->indent;
-			$self->pidl("PyErr_Format(PyExc_TypeError, \"Expected string or unicode object, got %s\", Py_TYPE($py_var)->tp_name);");
+			$self->pidl("PyErr_Format(PyExc_TypeError, \"Expected string (unicode or bytes) object, got %s\", Py_TYPE($py_var)->tp_name);");
 			$self->pidl("$fail");
 			$self->deindent;
 			$self->pidl("}");
@@ -1304,7 +1312,7 @@ sub ConvertScalarToPython($$$)
 	}
 
 	if ($ctypename eq "DATA_BLOB") {
-		return "PyString_FromStringAndSize((char *)($cvar).data, ($cvar).length)";
+		return "PyBytes_FromStringAndSize((char *)($cvar).data, ($cvar).length)";
 	}
 
 	if ($ctypename eq "NTSTATUS") {
@@ -1320,21 +1328,33 @@ sub ConvertScalarToPython($$$)
 	}
 
 	if (($ctypename eq "string" or $ctypename eq "nbt_string" or $ctypename eq "nbt_name" or $ctypename eq "wrepl_nbt_name")) {
-		return "PyString_FromStringOrNULL($cvar)";
+		return "PyStr_FromStringOrNULL($cvar)";
 	}
 
 	if (($ctypename eq "dns_string" or $ctypename eq "dns_name")) {
-		return "PyString_FromStringOrNULL($cvar)";
+		return "PyStr_FromStringOrNULL($cvar)";
 	}
 
 	# Not yet supported
-	if ($ctypename eq "string_array") { return "pytalloc_CObject_FromTallocPtr($cvar)"; }
-	if ($ctypename eq "ipv4address") { return "PyString_FromStringOrNULL($cvar)"; }
-	if ($ctypename eq "ipv6address") { return "PyString_FromStringOrNULL($cvar)"; }
-	if ($ctypename eq "dnsp_name") { return "PyString_FromStringOrNULL($cvar)"; }
-	if ($ctypename eq "dnsp_string") { return "PyString_FromStringOrNULL($cvar)"; }
+	if ($ctypename eq "string_array") { return "
+#if PY_MAJOR_VERSION >= 3
+PyCapsule_New($cvar, \"samba._pidl_capsule\", NULL)
+#else
+pytalloc_CObject_FromTallocPtr($cvar)
+#endif
+"; }
+	if ($ctypename eq "ipv4address") { return "PyStr_FromStringOrNULL($cvar)"; }
+	if ($ctypename eq "ipv6address") { return "PyStr_FromStringOrNULL($cvar)"; }
+	if ($ctypename eq "dnsp_name") { return "PyStr_FromStringOrNULL($cvar)"; }
+	if ($ctypename eq "dnsp_string") { return "PyStr_FromStringOrNULL($cvar)"; }
 	if ($ctypename eq "pointer") {
-		return "pytalloc_CObject_FromTallocPtr($cvar)";
+		return "
+#if PY_MAJOR_VERSION >= 3
+PyCapsule_New($cvar, \"samba._pidl_capsule\", NULL)
+#else
+pytalloc_CObject_FromTallocPtr($cvar)
+#endif
+";
 	}
 
 	die("Unknown scalar type $ctypename");
@@ -1498,6 +1518,17 @@ sub Parse($$$$$)
 #include \"$hdr\"
 #include \"$ndr_hdr\"
 
+#if PY_MAJOR_VERSION >= 3
+#define PyStr_FromString PyUnicode_FromString
+#define PyStr_AsUTF8 PyUnicode_AsUTF8
+#define PyInt_Type PyLong_Type
+#define PyInt_Check PyLong_Check
+#define PyInt_FromLong PyLong_FromLong
+#define PyInt_AsLong PyLong_AsLong
+#else
+#define PyStr_FromString PyString_FromString
+#define PyStr_AsUTF8 PyString_AsString
+#endif
 ");
 
 	foreach my $x (@$ndr) {
@@ -1518,9 +1549,23 @@ sub Parse($$$$$)
 
 	$self->pidl("");
 
-	$self->pidl_hdr("void init$basename(void);");
-	$self->pidl("void init$basename(void)");
-	$self->pidl("{");
+	$self->pidl("
+#define MODULE_DOC \"$basename DCE/RPC\"
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+	PyModuleDef_HEAD_INIT,
+	.m_name = \"$basename\",
+	.m_doc = MODULE_DOC,
+	.m_size = -1,
+	.m_methods = $basename\_methods,
+};
+#endif
+
+static PyObject* module_init(void)
+{
+");
+
 	$self->indent;
 	$self->pidl("PyObject *m;");
 	foreach my $h (@{$self->{module_imports}}) {
@@ -1533,7 +1578,7 @@ sub Parse($$$$$)
 		my $module_path = $h->{'val'};
 		$self->pidl("$var_name = PyImport_ImportModule(\"$module_path\");");
 		$self->pidl("if ($var_name == NULL)");
-		$self->pidl("\treturn;");
+		$self->pidl("\treturn NULL;");
 		$self->pidl("");
 	}
 
@@ -1546,7 +1591,7 @@ sub Parse($$$$$)
 		$module_var =~ s/\./_/g;
 		$self->pidl("$type_var = (PyTypeObject *)PyObject_GetAttrString($module_var, \"$pretty_name\");");
 		$self->pidl("if ($type_var == NULL)");
-		$self->pidl("\treturn;");
+		$self->pidl("\treturn NULL;");
 		$self->pidl("");
 	}
 
@@ -1554,7 +1599,7 @@ sub Parse($$$$$)
 
 	foreach (@{$self->{ready_types}}) {
 		$self->pidl("if (PyType_Ready($_) < 0)");
-		$self->pidl("\treturn;");
+		$self->pidl("\treturn NULL;");
 	}
 
 	$self->pidl($_) foreach (@{$self->{postreadycode}});
@@ -1568,9 +1613,15 @@ sub Parse($$$$$)
 
 	$self->pidl("");
 
-	$self->pidl("m = Py_InitModule3(\"$basename\", $basename\_methods, \"$basename DCE/RPC\");");
+	$self->pidl("
+		#if PY_MAJOR_VERSION >= 3
+			m = PyModule_Create(&moduledef);
+		#else
+			m = Py_InitModule3(\"$basename\", $basename\_methods, \"$basename DCE/RPC\");
+		#endif
+		");
 	$self->pidl("if (m == NULL)");
-	$self->pidl("\treturn;");
+	$self->pidl("\treturn NULL;");
 	$self->pidl("");
 	foreach my $h (@{$self->{constants}}) {
 		my $name = $h->{'key'};
@@ -1579,7 +1630,7 @@ sub Parse($$$$$)
 		if ($cvar =~ /^[0-9]+$/ or $cvar =~ /^0x[0-9a-fA-F]+$/) {
 			$py_obj = "$cvar > LONG_MAX ? PyLong_FromUnsignedLongLong($cvar) : PyInt_FromLong($cvar)";
 		} elsif ($cvar =~ /^".*"$/) {
-			$py_obj = "PyString_FromString($cvar)";
+			$py_obj = "PyStr_FromString($cvar)";
 		} else {
 			$py_obj = $self->ConvertObjectToPythonData("NULL", expandAlias($ctype), $cvar, undef);
 		}
@@ -1598,8 +1649,26 @@ sub Parse($$$$$)
 	$self->pidl("#endif");
 
 	$self->pidl("");
+	$self->pidl("return m;");
 	$self->deindent;
 	$self->pidl("}");
+
+
+	$self->pidl("
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit_$basename(void);
+PyMODINIT_FUNC PyInit_$basename(void)
+{
+    return module_init();
+}
+#else
+void init$basename(void);
+void init$basename(void)
+{
+    module_init();
+}
+#endif
+");
     return ($self->{res_hdr} . $self->{res});
 }
 
