@@ -25,8 +25,6 @@
 #include "py_net.h"
 #include "libnet_export_keytab.h"
 
-void initdckeytab(void);
-
 static PyObject *py_net_export_keytab(py_net_Object *self, PyObject *args, PyObject *kwargs)
 {
 	struct libnet_export_keytab r;
@@ -74,28 +72,43 @@ static PyMethodDef export_keytab_method_table[] = {
  * the global module table even if we don't really need that record. Thus, we initialize
  * dckeytab module but never use it.
  * */
-void initdckeytab(void)
+#define MODULE_DOC "A fake Python module to inject export_keytab() method into existing samba.net.Net class."
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+	PyModuleDef_HEAD_INIT,
+	.m_name = "dckeytab",
+	.m_doc = MODULE_DOC,
+	.m_size = -1,
+};
+#endif
+
+static PyObject* module_init(void)
 {
 	PyObject *m;
 	PyObject *Net;
 	PyObject *descr;
 	int ret;
 
-	m = Py_InitModule3("dckeytab", NULL, NULL);
+#if PY_MAJOR_VERSION >= 3
+	m = PyModule_Create(&moduledef);
+#else
+	m = Py_InitModule3("dckeytab", NULL, MODULE_DOC);
+#endif
 	if (m == NULL)
-		return;
+		return NULL;
 
 	m = PyImport_ImportModule("samba.net");
         if (m == NULL)
-		return;
+		return NULL;
 
 	Net = (PyObject *)PyObject_GetAttrString(m, "Net");
 	if (Net == NULL)
-		return;
+		return NULL;
 
 	descr = PyDescr_NewMethod((PyTypeObject*)Net, &export_keytab_method_table[0]);
 	if (descr == NULL)
-		return;
+		return NULL;
 
 	ret = PyDict_SetItemString(((PyTypeObject*)Net)->tp_dict,
 				     export_keytab_method_table[0].ml_name,
@@ -103,4 +116,19 @@ void initdckeytab(void)
 	if (ret != -1) {
 		Py_DECREF(descr);
 	}
+	return m;
 }
+
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit_dckeytab(void);
+PyMODINIT_FUNC PyInit_dckeytab(void)
+{
+    return module_init();
+}
+#else
+void initdckeytab(void);
+void initdckeytab(void)
+{
+    module_init();
+}
+#endif

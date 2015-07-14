@@ -36,7 +36,11 @@
 #include "py_net.h"
 #include "librpc/rpc/pyrpc_util.h"
 
-void initnet(void);
+#if PY_MAJOR_VERSION >= 3
+#define PyStr_FromString PyUnicode_FromString
+#else
+#define PyStr_FromString PyString_FromString
+#endif
 
 static PyObject *py_net_join_member(py_net_Object *self, PyObject *args, PyObject *kwargs)
 {
@@ -215,7 +219,7 @@ static PyObject *py_net_time(py_net_Object *self, PyObject *args, PyObject *kwar
 	tm = localtime(&r.generic.out.time);
 	strftime(timestr, sizeof(timestr)-1, "%c %Z",tm);
 	
-	ret = PyString_FromString(timestr);
+	ret = PyStr_FromString(timestr);
 
 	talloc_free(mem_ctx);
 
@@ -360,6 +364,8 @@ struct replicate_state {
 
 /*
   setup for replicate_chunk() calls
+
+  Note: Returns a PyCObject in Python 2, but a TallocObject in Python 3.
  */
 static PyObject *py_net_replicate_init(py_net_Object *self, PyObject *args, PyObject *kwargs)
 {
@@ -369,6 +375,10 @@ static PyObject *py_net_replicate_init(py_net_Object *self, PyObject *args, PyOb
 	struct loadparm_context *lp;
 	struct replicate_state *s;
 	NTSTATUS status;
+#if PY_MAJOR_VERSION >= 3
+	PyTypeObject *talloc_type;
+	PyObject *talloc_obj;
+#endif
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OOOO",
 					 discard_const_p(char *, kwnames),
@@ -429,9 +439,18 @@ static PyObject *py_net_replicate_init(py_net_Object *self, PyObject *args, PyOb
 	s->chunk.forest = &s->forest;
 	s->chunk.dest_dsa = &s->dest_dsa;
 
+#if PY_MAJOR_VERSION < 3
 	return pytalloc_CObject_FromTallocPtr(s);
+#else
+	talloc_type = pytalloc_GetObjectType();
+	if (talloc_type == NULL) {
+		return NULL;
+	}
+	talloc_obj = pytalloc_steal(talloc_type, s);
+	Py_DECREF(talloc_type);
+	return talloc_obj;
+#endif
 }
-
 
 /*
   process one replication chunk
@@ -447,6 +466,7 @@ static PyObject *py_net_replicate_chunk(py_net_Object *self, PyObject *args, PyO
 	unsigned req_level = 0;
 	NTSTATUS (*chunk_handler)(void *private_data, const struct libnet_BecomeDC_StoreChunk *c);
 	NTSTATUS status;
+	void *state;
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OIO|OIO",
 					 discard_const_p(char *, kwnames),
@@ -455,7 +475,12 @@ static PyObject *py_net_replicate_chunk(py_net_Object *self, PyObject *args, PyO
 		return NULL;
 	}
 
-	s = talloc_get_type(PyCObject_AsVoidPtr(py_state), struct replicate_state);
+#if PY_MAJOR_VERSION < 3
+	state = PyCObject_AsVoidPtr(py_state);
+#else
+	state = pytalloc_get_ptr(py_state);
+#endif
+	s = talloc_get_type(state, struct replicate_state);
 	if (!s) {
 		PyErr_SetString(PyExc_TypeError, "Expected replication_state");
 		return NULL;
@@ -675,7 +700,7 @@ static PyObject *net_obj_new(PyTypeObject *type, PyObject *args, PyObject *kwarg
 
 
 PyTypeObject py_net_Type = {
-	PyObject_HEAD_INIT(NULL) 0,
+	PyVarObject_HEAD_INIT(NULL, 0)
 	.tp_name = "net.Net",
 	.tp_basicsize = sizeof(py_net_Object),
 	.tp_dealloc = (destructor)py_net_dealloc,
@@ -683,21 +708,51 @@ PyTypeObject py_net_Type = {
 	.tp_new = net_obj_new,
 };
 
-void initnet(void)
+#define MODULE_DOC "net"
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+	PyModuleDef_HEAD_INIT,
+	.m_name = "net",
+	.m_doc = MODULE_DOC,
+	.m_size = -1,
+};
+#endif
+
+static PyObject* module_init(void)
 {
 	PyObject *m;
 
 	if (PyType_Ready(&py_net_Type) < 0)
-		return;
+		return NULL;
 
-	m = Py_InitModule3("net", NULL, NULL);
+#if PY_MAJOR_VERSION >= 3
+	m = PyModule_Create(&moduledef);
+#else
+	m = Py_InitModule3("net", NULL, MODULE_DOC);
+#endif
 	if (m == NULL)
-		return;
+		return NULL;
 
 	Py_INCREF(&py_net_Type);
 	PyModule_AddObject(m, "Net", (PyObject *)&py_net_Type);
-	PyModule_AddObject(m, "LIBNET_JOINDOMAIN_AUTOMATIC", PyInt_FromLong(LIBNET_JOINDOMAIN_AUTOMATIC));
-	PyModule_AddObject(m, "LIBNET_JOINDOMAIN_SPECIFIED", PyInt_FromLong(LIBNET_JOINDOMAIN_SPECIFIED));
-	PyModule_AddObject(m, "LIBNET_JOIN_AUTOMATIC", PyInt_FromLong(LIBNET_JOIN_AUTOMATIC));
-	PyModule_AddObject(m, "LIBNET_JOIN_SPECIFIED", PyInt_FromLong(LIBNET_JOIN_SPECIFIED));
+	PyModule_AddIntMacro(m, LIBNET_JOINDOMAIN_AUTOMATIC);
+	PyModule_AddIntMacro(m, LIBNET_JOINDOMAIN_SPECIFIED);
+	PyModule_AddIntMacro(m, LIBNET_JOIN_AUTOMATIC);
+	PyModule_AddIntMacro(m, LIBNET_JOIN_SPECIFIED);
+	return m;
 }
+
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit_net(void);
+PyMODINIT_FUNC PyInit_net(void)
+{
+    return module_init();
+}
+#else
+void initnet(void);
+void initnet(void)
+{
+    module_init();
+}
+#endif
