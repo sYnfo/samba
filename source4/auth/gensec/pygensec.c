@@ -28,6 +28,15 @@
 #include <tevent.h>
 #include "librpc/rpc/pyrpc_util.h"
 
+#if PY_MAJOR_VERSION >= 3
+#define PyStr_FromString PyUnicode_FromString
+#define PyStr_AsString PyUnicode_AsUTF8
+#define PyInt_FromLong PyLong_FromLong
+#else
+#define PyStr_FromString PyString_FromString
+#define PyStr_AsString PyString_AsString
+#endif
+
 static PyObject *py_get_name_by_authtype(PyObject *self, PyObject *args)
 {
 	int type;
@@ -43,7 +52,7 @@ static PyObject *py_get_name_by_authtype(PyObject *self, PyObject *args)
 	if (name == NULL)
 		Py_RETURN_NONE;
 
-	return PyString_FromString(name);
+	return PyStr_FromString(name);
 }
 
 static struct gensec_settings *settings_from_object(TALLOC_CTX *mem_ctx, PyObject *object)
@@ -71,7 +80,7 @@ static struct gensec_settings *settings_from_object(TALLOC_CTX *mem_ctx, PyObjec
 		return NULL;
 	}
 
-	s->target_hostname = PyString_AsString(py_hostname);
+	s->target_hostname = PyStr_AsString(py_hostname);
 	s->lp_ctx = lpcfg_from_py_object(s, py_lp_ctx);
 	return s;
 }
@@ -322,7 +331,7 @@ static PyObject *py_gensec_session_key(PyObject *self)
 		return NULL;
 	}
 
-	session_key_obj = PyString_FromStringAndSize((const char *)session_key.data,
+	session_key_obj = PyBytes_FromStringAndSize((const char *)session_key.data,
 						     session_key.length);
 	talloc_free(mem_ctx);
 	return session_key_obj;
@@ -443,13 +452,13 @@ static PyObject *py_gensec_update(PyObject *self, PyObject *args)
 
 	mem_ctx = talloc_new(NULL);
 
-	if (!PyString_Check(py_in)) {
-		PyErr_Format(PyExc_TypeError, "expected a string");
+	if (!PyBytes_Check(py_in)) {
+		PyErr_Format(PyExc_TypeError, "expected a bytestring");
 		return NULL;
 	}
 
-	in.data = (uint8_t *)PyString_AsString(py_in);
-	in.length = PyString_Size(py_in);
+	in.data = (uint8_t *)PyBytes_AsString(py_in);
+	in.length = PyBytes_Size(py_in);
 
 	status = gensec_update(security, mem_ctx, in, &out);
 
@@ -459,7 +468,7 @@ static PyObject *py_gensec_update(PyObject *self, PyObject *args)
 		talloc_free(mem_ctx);
 		return NULL;
 	}
-	ret = PyString_FromStringAndSize((const char *)out.data, out.length);
+	ret = PyBytes_FromStringAndSize((const char *)out.data, out.length);
 	talloc_free(mem_ctx);
 
 	if (NT_STATUS_EQUAL(status, NT_STATUS_MORE_PROCESSING_REQUIRED)) {
@@ -485,12 +494,12 @@ static PyObject *py_gensec_wrap(PyObject *self, PyObject *args)
 
 	mem_ctx = talloc_new(NULL);
 
-	if (!PyString_Check(py_in)) {
-		PyErr_Format(PyExc_TypeError, "expected a string");
+	if (!PyBytes_Check(py_in)) {
+		PyErr_Format(PyExc_TypeError, "expected a bytestring");
 		return NULL;
 	}
-	in.data = (uint8_t *)PyString_AsString(py_in);
-	in.length = PyString_Size(py_in);
+	in.data = (uint8_t *)PyBytes_AsString(py_in);
+	in.length = PyBytes_Size(py_in);
 
 	status = gensec_wrap(security, mem_ctx, &in, &out);
 
@@ -500,7 +509,7 @@ static PyObject *py_gensec_wrap(PyObject *self, PyObject *args)
 		return NULL;
 	}
 
-	ret = PyString_FromStringAndSize((const char *)out.data, out.length);
+	ret = PyBytes_FromStringAndSize((const char *)out.data, out.length);
 	talloc_free(mem_ctx);
 	return ret;
 }
@@ -519,13 +528,13 @@ static PyObject *py_gensec_unwrap(PyObject *self, PyObject *args)
 
 	mem_ctx = talloc_new(NULL);
 
-	if (!PyString_Check(py_in)) {
+	if (!PyBytes_Check(py_in)) {
 		PyErr_Format(PyExc_TypeError, "expected a string");
 		return NULL;
 	}
 
-	in.data = (uint8_t *)PyString_AsString(py_in);
-	in.length = PyString_Size(py_in);
+	in.data = (uint8_t *)PyBytes_AsString(py_in);
+	in.length = PyBytes_Size(py_in);
 
 	status = gensec_unwrap(security, mem_ctx, &in, &out);
 
@@ -535,7 +544,7 @@ static PyObject *py_gensec_unwrap(PyObject *self, PyObject *args)
 		return NULL;
 	}
 
-	ret = PyString_FromStringAndSize((const char *)out.data, out.length);
+	ret = PyBytes_FromStringAndSize((const char *)out.data, out.length);
 	talloc_free(mem_ctx);
 	return ret;
 }
@@ -587,31 +596,60 @@ static PyTypeObject Py_Security = {
 	.tp_basicsize = sizeof(pytalloc_Object),
 };
 
-void initgensec(void);
-void initgensec(void)
+#define MODULE_DOC "Generic Security Interface."
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+	PyModuleDef_HEAD_INIT,
+	.m_name = "gensec",
+	.m_doc = MODULE_DOC,
+	.m_size = -1,
+};
+#endif
+
+static PyObject* module_init(void)
 {
 	PyObject *m;
 
 	Py_Security.tp_base = pytalloc_GetObjectType();
 	if (Py_Security.tp_base == NULL)
-		return;
+		return NULL;
 
 	if (PyType_Ready(&Py_Security) < 0)
-		return;
+		return NULL;
 
-	m = Py_InitModule3("gensec", NULL, "Generic Security Interface.");
+#if PY_MAJOR_VERSION >= 3
+	m = PyModule_Create(&moduledef);
+#else
+	m = Py_InitModule3("gensec", NULL, MODULE_DOC);
+#endif
 	if (m == NULL)
-		return;
+		return NULL;
 
-	PyModule_AddObject(m, "FEATURE_SESSION_KEY",     PyInt_FromLong(GENSEC_FEATURE_SESSION_KEY));
-	PyModule_AddObject(m, "FEATURE_SIGN",            PyInt_FromLong(GENSEC_FEATURE_SIGN));
-	PyModule_AddObject(m, "FEATURE_SEAL",            PyInt_FromLong(GENSEC_FEATURE_SEAL));
-	PyModule_AddObject(m, "FEATURE_DCE_STYLE",       PyInt_FromLong(GENSEC_FEATURE_DCE_STYLE));
-	PyModule_AddObject(m, "FEATURE_ASYNC_REPLIES",   PyInt_FromLong(GENSEC_FEATURE_ASYNC_REPLIES));
-	PyModule_AddObject(m, "FEATURE_DATAGRAM_MODE",   PyInt_FromLong(GENSEC_FEATURE_DATAGRAM_MODE));
-	PyModule_AddObject(m, "FEATURE_SIGN_PKT_HEADER", PyInt_FromLong(GENSEC_FEATURE_SIGN_PKT_HEADER));
-	PyModule_AddObject(m, "FEATURE_NEW_SPNEGO",      PyInt_FromLong(GENSEC_FEATURE_NEW_SPNEGO));
+	PyModule_AddIntConstant(m, "FEATURE_SESSION_KEY",     GENSEC_FEATURE_SESSION_KEY);
+	PyModule_AddIntConstant(m, "FEATURE_SIGN",            GENSEC_FEATURE_SIGN);
+	PyModule_AddIntConstant(m, "FEATURE_SEAL",            GENSEC_FEATURE_SEAL);
+	PyModule_AddIntConstant(m, "FEATURE_DCE_STYLE",       GENSEC_FEATURE_DCE_STYLE);
+	PyModule_AddIntConstant(m, "FEATURE_ASYNC_REPLIES",   GENSEC_FEATURE_ASYNC_REPLIES);
+	PyModule_AddIntConstant(m, "FEATURE_DATAGRAM_MODE",   GENSEC_FEATURE_DATAGRAM_MODE);
+	PyModule_AddIntConstant(m, "FEATURE_SIGN_PKT_HEADER", GENSEC_FEATURE_SIGN_PKT_HEADER);
+	PyModule_AddIntConstant(m, "FEATURE_NEW_SPNEGO",      GENSEC_FEATURE_NEW_SPNEGO);
 
 	Py_INCREF(&Py_Security);
 	PyModule_AddObject(m, "Security", (PyObject *)&Py_Security);
+	return m;
 }
+
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit_gensec(void);
+PyMODINIT_FUNC PyInit_gensec(void)
+{
+    return module_init();
+}
+#else
+void initgensec(void);
+void initgensec(void)
+{
+    module_init();
+}
+#endif
