@@ -28,11 +28,9 @@
 #include "libcli/util/pyerrors.h"
 #include "param/pyparam.h"
 
-void initposix_eadb(void);
-
 static PyObject *py_is_xattr_supported(PyObject *self)
 {
-	return Py_True;
+	Py_RETURN_TRUE;
 }
 
 static PyObject *py_wrap_setxattr(PyObject *self, PyObject *args)
@@ -102,7 +100,7 @@ static PyObject *py_wrap_getxattr(PyObject *self, PyObject *args)
 		talloc_free(mem_ctx);
 		return NULL;
 	}
-	ret = PyString_FromStringAndSize((char *)blob.data, blob.length);
+	ret = PyBytes_FromStringAndSize((char *)blob.data, blob.length);
 	talloc_free(mem_ctx);
 	return ret;
 }
@@ -119,12 +117,37 @@ static PyMethodDef py_posix_eadb_methods[] = {
 	{ NULL }
 };
 
+#define MODULE_DOC "Python bindings for xattr manipulation."
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+	PyModuleDef_HEAD_INIT,
+	.m_name = "posix_eadb",
+	.m_doc = MODULE_DOC,
+	.m_size = -1,
+	.m_methods = py_posix_eadb_methods,
+};
+#endif
+
+static PyObject* module_init(void)
+{
+#if PY_MAJOR_VERSION >= 3
+	return PyModule_Create(&moduledef);
+#else
+	return Py_InitModule3("posix_eadb", py_posix_eadb_methods, MODULE_DOC);
+#endif
+}
+
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit_posix_eadb(void);
+PyMODINIT_FUNC PyInit_posix_eadb(void)
+{
+    return module_init();
+}
+#else
+void initposix_eadb(void);
 void initposix_eadb(void)
 {
-	PyObject *m;
-
-	m = Py_InitModule3("posix_eadb", py_posix_eadb_methods,
-			   "Python bindings for xattr manipulation.");
-	if (m == NULL)
-		return;
+    module_init();
 }
+#endif

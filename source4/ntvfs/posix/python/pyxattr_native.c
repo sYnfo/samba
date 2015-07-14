@@ -23,14 +23,12 @@
 #include "librpc/ndr/libndr.h"
 #include "system/filesys.h"
 
-void initxattr_native(void);
-
 static PyObject *py_is_xattr_supported(PyObject *self)
 {
 #if !defined(HAVE_XATTR_SUPPORT)
-	return Py_False;
+	Py_RETURN_FALSE;
 #else
-	return Py_True;
+	Py_RETURN_TRUE;
 #endif
 }
 
@@ -90,7 +88,7 @@ static PyObject *py_wrap_getxattr(PyObject *self, PyObject *args)
 		talloc_free(mem_ctx);
 		return NULL;
 	}
-	ret = PyString_FromStringAndSize(buf, len);
+	ret = PyBytes_FromStringAndSize(buf, len);
 	talloc_free(mem_ctx);
 	return ret;
 }
@@ -107,14 +105,37 @@ static PyMethodDef py_xattr_methods[] = {
 	{ NULL }
 };
 
-void initxattr_native(void)
+#define MODULE_DOC "Python bindings for xattr manipulation."
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+	PyModuleDef_HEAD_INIT,
+	.m_name = "xattr_native",
+	.m_doc = MODULE_DOC,
+	.m_size = -1,
+	.m_methods = py_xattr_methods,
+};
+#endif
+
+static PyObject* module_init(void)
 {
-	PyObject *m;
-
-	m = Py_InitModule3("xattr_native", py_xattr_methods,
-			   "Python bindings for xattr manipulation.");
-
-	if (m == NULL)
-		return;
+#if PY_MAJOR_VERSION >= 3
+	return PyModule_Create(&moduledef);
+#else
+	return Py_InitModule3("xattr_native", py_xattr_methods, MODULE_DOC);
+#endif
 }
 
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit_xattr_native(void);
+PyMODINIT_FUNC PyInit_xattr_native(void)
+{
+    return module_init();
+}
+#else
+void initxattr_native(void);
+void initxattr_native(void)
+{
+    module_init();
+}
+#endif

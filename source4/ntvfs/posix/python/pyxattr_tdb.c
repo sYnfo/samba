@@ -32,11 +32,9 @@
 #include "lib/dbwrap/dbwrap_tdb.h"
 #include "source3/lib/xattr_tdb.h"
 
-void initxattr_tdb(void);
-
 static PyObject *py_is_xattr_supported(PyObject *self)
 {
-	return Py_True;
+	Py_RETURN_TRUE;
 }
 
 static PyObject *py_wrap_setxattr(PyObject *self, PyObject *args)
@@ -131,7 +129,7 @@ static PyObject *py_wrap_getxattr(PyObject *self, PyObject *args)
 		talloc_free(mem_ctx);
 		return NULL;
 	}
-	ret_obj = PyString_FromStringAndSize((char *)blob.data, xattr_size);
+	ret_obj = PyBytes_FromStringAndSize((char *)blob.data, xattr_size);
 	talloc_free(mem_ctx);
 	return ret_obj;
 }
@@ -148,13 +146,37 @@ static PyMethodDef py_xattr_methods[] = {
 	{ NULL }
 };
 
-void initxattr_tdb(void)
-{
-	PyObject *m;
+#define MODULE_DOC "Python bindings for xattr manipulation."
 
-	m = Py_InitModule3("xattr_tdb", py_xattr_methods,
-			   "Python bindings for xattr manipulation.");
-	if (m == NULL)
-		return;
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+	PyModuleDef_HEAD_INIT,
+	.m_name = "xattr_tdb",
+	.m_doc = MODULE_DOC,
+	.m_size = -1,
+	.m_methods = py_xattr_methods,
+};
+#endif
+
+static PyObject* module_init(void)
+{
+#if PY_MAJOR_VERSION >= 3
+	return PyModule_Create(&moduledef);
+#else
+	return Py_InitModule3("xattr_tdb", py_xattr_methods, MODULE_DOC);
+#endif
 }
 
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit_xattr_tdb(void);
+PyMODINIT_FUNC PyInit_xattr_tdb(void)
+{
+    return module_init();
+}
+#else
+void initxattr_tdb(void);
+void initxattr_tdb(void)
+{
+    module_init();
+}
+#endif
