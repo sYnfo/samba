@@ -23,7 +23,12 @@
 #include "param/pyparam.h"
 #include "lib/socket/netif.h"
 
-void init_glue(void);
+#if PY_MAJOR_VERSION >= 3
+#define PyStr_FromString PyUnicode_FromString
+#define PyInt_FromLong PyLong_FromLong
+#else
+#define PyStr_FromString PyString_FromString
+#endif
 
 static PyObject *py_generate_random_str(PyObject *self, PyObject *args)
 {
@@ -34,7 +39,7 @@ static PyObject *py_generate_random_str(PyObject *self, PyObject *args)
 		return NULL;
 
 	retstr = generate_random_str(NULL, len);
-	ret = PyString_FromString(retstr);
+	ret = PyBytes_FromString(retstr);
 	talloc_free(retstr);
 	return ret;
 }
@@ -51,7 +56,7 @@ static PyObject *py_generate_random_password(PyObject *self, PyObject *args)
 	if (retstr == NULL) {
 		return NULL;
 	}
-	ret = PyString_FromString(retstr);
+	ret = PyStr_FromString(retstr);
 	talloc_free(retstr);
 	return ret;
 }
@@ -100,7 +105,7 @@ static PyObject *py_nttime2string(PyObject *self, PyObject *args)
 	}
 
 	string = nt_time_string(tmp_ctx, nt);
-	ret =  PyString_FromString(string);
+	ret =  PyStr_FromString(string);
 
 	talloc_free(tmp_ctx);
 
@@ -190,7 +195,7 @@ static PyObject *py_interface_ips(PyObject *self, PyObject *args)
 		const char *ip = iface_list_n_ip(ifaces, i);
 
 		if (all_interfaces) {
-			PyList_SetItem(pylist, ifcount, PyString_FromString(ip));
+			PyList_SetItem(pylist, ifcount, PyStr_FromString(ip));
 			ifcount++;
 			continue;
 		}
@@ -211,7 +216,7 @@ static PyObject *py_interface_ips(PyObject *self, PyObject *args)
 			continue;
 		}
 
-		PyList_SetItem(pylist, ifcount, PyString_FromString(ip));
+		PyList_SetItem(pylist, ifcount, PyStr_FromString(ip));
 		ifcount++;
 	}
 	talloc_free(tmp_ctx);
@@ -239,7 +244,7 @@ static PyObject *py_strstr_m(PyObject *self, PyObject *args)
 	if (!ret) {
 		Py_RETURN_NONE;
 	}
-	return PyString_FromString(ret);
+	return PyStr_FromString(ret);
 }
 
 static PyMethodDef py_misc_methods[] = {
@@ -270,18 +275,46 @@ static PyMethodDef py_misc_methods[] = {
 	{ NULL }
 };
 
-void init_glue(void)
+#define MODULE_DOC "Python bindings for miscellaneous Samba functions."
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+	PyModuleDef_HEAD_INIT,
+	.m_name = "_glue",
+	.m_doc = MODULE_DOC,
+	.m_size = -1,
+	.m_methods = py_misc_methods,
+};
+#endif
+
+static PyObject* module_init(void)
 {
 	PyObject *m;
 
 	debug_setup_talloc_log();
 
-	m = Py_InitModule3("_glue", py_misc_methods, 
-			   "Python bindings for miscellaneous Samba functions.");
+#if PY_MAJOR_VERSION >= 3
+	m = PyModule_Create(&moduledef);
+#else
+	m = Py_InitModule3("_glue", py_misc_methods, MODULE_DOC);
+#endif
 	if (m == NULL)
-		return;
+		return NULL;
 
-	PyModule_AddObject(m, "version",
-					   PyString_FromString(SAMBA_VERSION_STRING));
+	PyModule_AddStringConstant(m, "version", SAMBA_VERSION_STRING);
+	return m;
 }
 
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit__glue(void);
+PyMODINIT_FUNC PyInit__glue(void)
+{
+    return module_init();
+}
+#else
+void init_glue(void);
+void init_glue(void)
+{
+    module_init();
+}
+#endif
