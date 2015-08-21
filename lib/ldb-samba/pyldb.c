@@ -29,8 +29,6 @@
 #include "lib/ldb-samba/ldif_handlers.h"
 #include "auth/pyauth.h"
 
-void init_ldb(void);
-
 static PyObject *pyldb_module;
 static PyObject *py_ldb_error;
 static PyTypeObject PySambaLdb;
@@ -244,27 +242,59 @@ static PyTypeObject PySambaLdb = {
 	.tp_flags = Py_TPFLAGS_DEFAULT|Py_TPFLAGS_BASETYPE,
 };
 
-void init_ldb(void)
+#define MODULE_DOC "Samba-specific LDB python bindings"
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef moduledef = {
+	PyModuleDef_HEAD_INIT,
+	.m_name = "_ldb",
+	.m_doc = MODULE_DOC,
+	.m_size = -1,
+	.m_methods = NULL,
+};
+#endif
+
+static PyObject* module_init(void);
+static PyObject* module_init(void)
 {
 	PyObject *m;
 
 	pyldb_module = PyImport_ImportModule("ldb");
 	if (pyldb_module == NULL)
-		return;
+		return NULL;
 
 	PySambaLdb.tp_base = (PyTypeObject *)PyObject_GetAttrString(pyldb_module, "Ldb");
 	if (PySambaLdb.tp_base == NULL)
-		return;
+		return NULL;
 
 	py_ldb_error = PyObject_GetAttrString(pyldb_module, "LdbError");
 
 	if (PyType_Ready(&PySambaLdb) < 0)
-		return;
+		return NULL;
 
-	m = Py_InitModule3("_ldb", NULL, "Samba-specific LDB python bindings");
+#if PY_MAJOR_VERSION >= 3
+	m = PyModule_Create(&moduledef);
+#else
+	m = Py_InitModule3("_ldb", NULL, MODULE_DOC);
+#endif
 	if (m == NULL)
-		return;
+		return NULL;
 
 	Py_INCREF(&PySambaLdb);
 	PyModule_AddObject(m, "Ldb", (PyObject *)&PySambaLdb);
+	return m;
 }
+
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC PyInit__ldb(void);
+PyMODINIT_FUNC PyInit__ldb(void)
+{
+	return module_init();
+}
+#else
+void init_ldb(void);
+void init_ldb(void)
+{
+	module_init();
+}
+#endif
