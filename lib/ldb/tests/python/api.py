@@ -2,6 +2,14 @@
 # Simple tests for the ldb python bindings.
 # Copyright (C) 2007 Jelmer Vernooij <jelmer@samba.org>
 
+# TODO:
+#  Ldb.schema_attribute_add
+#  Ldb.schema_attribute_remove
+#  Ldb.sequence_number
+#  Ldb.set_modules_dir
+#  Ldb.setup_wellknown_attributes
+#  Ldb.transaction_prepare_commit
+
 import os
 from unittest import TestCase
 import sys
