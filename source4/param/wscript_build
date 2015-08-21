@@ -1,11 +1,5 @@
 #!/usr/bin/env python
 
-bld.SAMBA_SUBSYSTEM('PROVISION',
-	source='provision.c pyparam.c',
-	deps='LIBPYTHON pyparam_util ldb pytalloc-util pyldb-util',
-	pyext=True,
-	)
-
 
 bld.SAMBA_SUBSYSTEM('share',
 	source='share.c',
@@ -44,9 +38,19 @@ for env in bld.gen_python_environments():
 		)
 
 	pyparam_util = bld.pyembed_libname('pyparam_util')
+	pytalloc_util = bld.pyembed_libname('pytalloc-util')
+	pyldb_util = bld.pyembed_libname('pyldb-util')
+	LIBPYTHON = bld.pyembed_libname('LIBPYTHON')
+	PROVISION = bld.pyembed_libname('PROVISION')
 	bld.SAMBA_SUBSYSTEM(pyparam_util,
 		source='pyparam_util.c',
-		deps='LIBPYTHON samba-hostconfig',
+		deps='samba-hostconfig ' + LIBPYTHON,
+		pyext=True,
+		)
+
+	bld.SAMBA_SUBSYSTEM(PROVISION,
+		source='provision.c pyparam.c',
+		deps='%s %s %s %s ldb' % (LIBPYTHON, pyparam_util, pytalloc_util, pyldb_util),
 		pyext=True,
 		)
 

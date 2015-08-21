@@ -110,10 +110,10 @@ static PyObject *py_lp_ctx_get_helper(struct loadparm_context *lp_ctx, const cha
 
     /* construct and return the right type of python object */
     switch (parm->type) {
-#if PY_MAJOR_VERSION < 3  /* TODO - is this byte or ASCII? */
+	/* TODO - is this byte or ASCII? */
     case P_CHAR:
-	return PyString_FromFormat("%c", *(char *)parm_ptr);
-#endif
+	return PyStr_FromFormat("%c", *(char *)parm_ptr);
+	/* TODO: same below */
     case P_STRING:
     case P_USTRING:
 	return PyStr_FromString(*(char **)parm_ptr);
