@@ -16,6 +16,7 @@
 #
 
 """Tests for samba.dcerpc.unixinfo."""
+from __future__ import absolute_import
 
 
 from samba.dcerpc import unixinfo
@@ -34,13 +35,13 @@ class UnixinfoTests(RpcInterfaceTestCase):
         self.assertTrue(isinstance(infos[0].homedir, unicode))
 
     def test_getpwuid(self):
-        infos = self.conn.GetPWUid(map(long, range(512)))
+        infos = self.conn.GetPWUid(map(int, range(512)))
         self.assertEquals(512, len(infos))
         self.assertEquals("/bin/false", infos[0].shell)
         self.assertTrue(isinstance(infos[0].homedir, unicode))
 
     def test_gidtosid(self):
-        self.conn.GidToSid(1000L)
+        self.conn.GidToSid(1000)
 
     def test_uidtosid(self):
         self.conn.UidToSid(1000)

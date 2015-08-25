@@ -18,6 +18,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 import itertools
 
@@ -38,14 +41,14 @@ def write_dot_file(basename, edge_list, vertices=None, label=None,
     if debug is not None:
         debug(f.name)
     graphname = ''.join(x for x in basename if x.isalnum())
-    print >>f, '%s %s {' % ('digraph' if directed else 'graph', graphname)
-    print >>f, 'label="%s";\nfontsize=20;' % (label or graphname)
+    print('%s %s {' % ('digraph' if directed else 'graph', graphname), file=f)
+    print('label="%s";\nfontsize=20;' % (label or graphname), file=f)
     if vertices:
         for i, v in enumerate(vertices):
             if reformat_labels:
                 v = v.replace(',', '\\n')
             vc = ('color="%s"' % vertex_colors[i]) if vertex_colors else ''
-            print >>f, '"%s" [%s];' % (v, vc)
+            print('"%s" [%s];' % (v, vc), file=f)
 
     for i, edge in enumerate(edge_list):
         a, b = edge
@@ -55,8 +58,8 @@ def write_dot_file(basename, edge_list, vertices=None, label=None,
         line = '->' if directed else '--'
         el = ('label="%s"' % edge_labels[i]) if edge_labels else ''
         ec = ('color="%s"' % edge_colors[i]) if edge_colors else ''
-        print >>f, '"%s" %s "%s" [%s %s];' % (a, line, b, el, ec)
-    print >>f, '}'
+        print('"%s" %s "%s" [%s %s];' % (a, line, b, el, ec), file=f)
+    print('}', file=f)
     f.close()
 
 
@@ -322,7 +325,7 @@ def verify_graph(title, edges, vertices=None, directed=False, properties=(),
         try:
             f(edges, vertices, edge_vertices)
             debug(" %s%18s:%s verified!" % (DARK_GREEN, p, C_NORMAL))
-        except GraphError, e:
+        except GraphError as e:
             errors.append((p, e))
 
     if errors:
@@ -358,8 +361,8 @@ def verify_and_dot(basename, edges, vertices=None, label=None,
 def list_verify_tests():
     for k, v in sorted(globals().items()):
         if k.startswith('verify_graph_'):
-            print k.replace('verify_graph_', '')
+            print(k.replace('verify_graph_', ''))
             if v.__doc__:
-                print '    %s%s%s' % (GREY, v.__doc__.rstrip(), C_NORMAL)
+                print('    %s%s%s' % (GREY, v.__doc__.rstrip(), C_NORMAL))
             else:
-                print
+                print()

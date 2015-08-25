@@ -16,6 +16,7 @@
 #
 
 """Tests for samba.dcerpc.registry."""
+from __future__ import absolute_import
 
 from samba.dcerpc import winreg
 from samba.tests import RpcInterfaceTestCase

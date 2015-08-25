@@ -23,6 +23,8 @@
 
   $ python -m samba.subunit.run mylib.tests.test_suite
 """
+from __future__ import absolute_import
+from __future__ import print_function
 
 from iso8601.iso8601 import Utc
 
@@ -684,7 +686,7 @@ class TestProgram(object):
 
     def usageExit(self, msg=None):
         if msg:
-            print (msg)
+            print(msg)
         usage = {'progName': self.progName, 'catchbreak': '',
                  'buffer': ''}
         if self.catchbreak != False:

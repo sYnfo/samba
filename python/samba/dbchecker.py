@@ -17,6 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import ldb
 import samba
 import time
@@ -30,6 +33,7 @@ from samba.common import dsdb_Dn
 from samba.dcerpc import security
 from samba.descriptor import get_wellknown_sds, get_diff_sds
 from samba.auth import system_session, admin_session
+from six.moves import map
 
 
 class dbcheck(object):
@@ -86,7 +90,8 @@ class dbcheck(object):
                            attrs=["objectSid"])
             dnsadmins_sid = ndr_unpack(security.dom_sid, res[0]["objectSid"][0])
             self.name_map['DnsAdmins'] = str(dnsadmins_sid)
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             if enum != ldb.ERR_NO_SUCH_OBJECT:
                 raise
             pass
@@ -187,7 +192,7 @@ class dbcheck(object):
         try:
             controls = controls + ["local_oid:%s:0" % dsdb.DSDB_CONTROL_DBCHECK]
             self.samdb.delete(dn, controls=controls)
-        except Exception, err:
+        except Exception as err:
             self.report("%s : %s" % (msg, err))
             return False
         return True
@@ -199,7 +204,7 @@ class dbcheck(object):
         try:
             controls = controls + ["local_oid:%s:0" % dsdb.DSDB_CONTROL_DBCHECK]
             self.samdb.modify(m, controls=controls, validate=validate)
-        except Exception, err:
+        except Exception as err:
             self.report("%s : %s" % (msg, err))
             return False
         return True
@@ -216,7 +221,7 @@ newSuperior: %s""" % (str(from_dn), str(to_rdn), str(to_base)))
             to_dn = to_rdn + to_base
             controls = controls + ["local_oid:%s:0" % dsdb.DSDB_CONTROL_DBCHECK]
             self.samdb.rename(from_dn, to_dn, controls=controls)
-        except Exception, err:
+        except Exception as err:
             self.report("%s : %s" % (msg, err))
             return False
         return True
@@ -330,7 +335,8 @@ newSuperior: %s""" % (str(from_dn), str(to_rdn), str(to_base)))
         try:
             res = self.samdb.search(base=str(dsdb_dn.dn), scope=ldb.SCOPE_BASE,
                                     attrs=[], controls=controls)
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             self.report("unable to find object for DN %s - (%s)" % (dsdb_dn.dn, estr))
             self.err_missing_dn_GUID(dn, attrname, val, dsdb_dn)
             return
@@ -623,7 +629,8 @@ newSuperior: %s""" % (str(from_dn), str(to_rdn), str(to_base)))
             try:
                 res = self.samdb.search(base="<GUID=%s>" % guidstr, scope=ldb.SCOPE_BASE,
                                         attrs=attrs, controls=["extended_dn:1:1", "show_recycled:1"])
-            except ldb.LdbError, (enum, estr):
+            except ldb.LdbError as e:
+                (enum, estr) = e.args
                 error_count += 1
                 self.err_incorrect_dn_GUID(obj.dn, attrname, val, dsdb_dn, "incorrect GUID")
                 continue
@@ -842,7 +849,7 @@ newSuperior: %s""" % (str(from_dn), str(to_rdn), str(to_base)))
         cls = None
         try:
             cls = obj["objectClass"][-1]
-        except KeyError, e:
+        except KeyError as e:
             pass
 
         if cls is None:
@@ -1060,7 +1067,8 @@ newSuperior: %s""" % (str(from_dn), str(to_rdn), str(to_base)))
             instancetype |= dsdb.INSTANCE_TYPE_IS_NC_HEAD
             try:
                 self.samdb.search(base=dn.parent(), scope=ldb.SCOPE_BASE, attrs=[], controls=["show_recycled:1"])
-            except ldb.LdbError, (enum, estr):
+            except ldb.LdbError as e:
+                (enum, estr) = e.args
                 if enum != ldb.ERR_NO_SUCH_OBJECT:
                     raise
             else:
@@ -1085,13 +1093,13 @@ newSuperior: %s""" % (str(from_dn), str(to_rdn), str(to_base)))
         '''check one object'''
         if self.verbose:
             self.report("Checking object %s" % dn)
-        if "dn" in map(str.lower, attrs):
+        if "dn" in list(map(str.lower, attrs)):
             attrs.append("name")
-        if "distinguishedname" in map(str.lower, attrs):
+        if "distinguishedname" in list(map(str.lower, attrs)):
             attrs.append("name")
-        if str(dn.get_rdn_name()).lower() in map(str.lower, attrs):
+        if str(dn.get_rdn_name()).lower() in list(map(str.lower, attrs)):
             attrs.append("name")
-        if 'name' in map(str.lower, attrs):
+        if 'name' in list(map(str.lower, attrs)):
             attrs.append(dn.get_rdn_name())
             attrs.append("isDeleted")
             attrs.append("systemFlags")
@@ -1113,7 +1121,8 @@ newSuperior: %s""" % (str(from_dn), str(to_rdn), str(to_base)))
                                         "sd_flags:1:%d" % sd_flags,
                                     ],
                                     attrs=attrs)
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             if enum == ldb.ERR_NO_SUCH_OBJECT:
                 if self.in_transaction:
                     self.report("ERROR: Object %s disappeared during check" % dn)
@@ -1134,7 +1143,7 @@ newSuperior: %s""" % (str(from_dn), str(to_rdn), str(to_base)))
         try:
             deleted_objects_dn = self.samdb.get_wellknown_dn(nc_dn,
                                                  samba.dsdb.DS_GUID_DELETED_OBJECTS_CONTAINER)
-        except KeyError, e:
+        except KeyError as e:
             deleted_objects_dn = ldb.Dn(self.samdb, "CN=Deleted Objects,%s" % nc_dn)
 
         object_rdn_attr = None
@@ -1265,7 +1274,7 @@ newSuperior: %s""" % (str(from_dn), str(to_rdn), str(to_base)))
             # special handling for some specific attribute types
             try:
                 syntax_oid = self.samdb_schema.get_syntax_oid_from_lDAPDisplayName(attrname)
-            except Exception, msg:
+            except Exception as msg:
                 self.err_unknown_attribute(obj, attrname)
                 error_count += 1
                 continue
@@ -1295,11 +1304,11 @@ newSuperior: %s""" % (str(from_dn), str(to_rdn), str(to_base)))
                     error_count += 1
                     self.err_wrong_instancetype(obj, calculated_instancetype)
 
-        if not got_objectclass and ("*" in attrs or "objectclass" in map(str.lower, attrs)):
+        if not got_objectclass and ("*" in attrs or "objectclass" in list(map(str.lower, attrs))):
             error_count += 1
             self.err_missing_objectclass(dn)
 
-        if ("*" in attrs or "name" in map(str.lower, attrs)):
+        if ("*" in attrs or "name" in list(map(str.lower, attrs))):
             if name_val is None:
                 error_count += 1
                 self.report("ERROR: Not fixing missing 'name' on '%s'" % (str(obj.dn)))
@@ -1358,7 +1367,7 @@ newSuperior: %s""" % (str(from_dn), str(to_rdn), str(to_base)))
                     self.fix_metadata(dn, att)
 
         if self.is_fsmo_role(dn):
-            if "fSMORoleOwner" not in obj and ("*" in attrs or "fsmoroleowner" in map(str.lower, attrs)):
+            if "fSMORoleOwner" not in obj and ("*" in attrs or "fsmoroleowner" in list(map(str.lower, attrs))):
                 self.err_no_fsmoRoleOwner(obj)
                 error_count += 1
 
@@ -1366,7 +1375,8 @@ newSuperior: %s""" % (str(from_dn), str(to_rdn), str(to_base)))
             if dn != self.samdb.get_root_basedn():
                 res = self.samdb.search(base=dn.parent(), scope=ldb.SCOPE_BASE,
                                         controls=["show_recycled:1", "show_deleted:1"])
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             if enum == ldb.ERR_NO_SUCH_OBJECT:
                 self.err_missing_parent(obj)
                 error_count += 1

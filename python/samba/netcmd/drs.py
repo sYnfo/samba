@@ -18,6 +18,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import
+
 import samba.getopt as options
 import ldb
 
@@ -31,13 +33,13 @@ from samba.netcmd import (
 from samba.samdb import SamDB
 from samba import drs_utils, nttime2string, dsdb
 from samba.dcerpc import drsuapi, misc
-import common
+from . import common
 
 def drsuapi_connect(ctx):
     '''make a DRSUAPI connection to the server'''
     try:
         (ctx.drsuapi, ctx.drsuapi_handle, ctx.bind_supported_extensions) = drs_utils.drsuapi_connect(ctx.server, ctx.lp, ctx.creds)
-    except Exception, e:
+    except Exception as e:
         raise CommandError("DRS connection to %s failed" % ctx.server, e)
 
 def samdb_connect(ctx):
@@ -46,7 +48,7 @@ def samdb_connect(ctx):
         ctx.samdb = SamDB(url="ldap://%s" % ctx.server,
                           session_info=system_session(),
                           credentials=ctx.creds, lp=ctx.lp)
-    except Exception, e:
+    except Exception as e:
         raise CommandError("LDAP connection to %s failed" % ctx.server, e)
 
 def drs_errmsg(werr):
@@ -114,7 +116,7 @@ class cmd_drs_showrepl(Command):
         req1.info_type = info_type
         try:
             (info_type, info) = ctx.drsuapi.DsReplicaGetInfo(ctx.drsuapi_handle, 1, req1)
-        except Exception, e:
+        except Exception as e:
             raise CommandError("DsReplicaGetInfo of type %u failed" % info_type, e)
         return (info_type, info)
 
@@ -137,7 +139,7 @@ class cmd_drs_showrepl(Command):
         (site, server) = drs_parse_ntds_dn(ntds_dn)
         try:
             ntds = self.samdb.search(base=ntds_dn, scope=ldb.SCOPE_BASE, attrs=['options', 'objectGUID', 'invocationId'])
-        except Exception, e:
+        except Exception as e:
             raise CommandError("Failed to search NTDS DN %s" % ntds_dn)
         conn = self.samdb.search(base=ntds_dn, expression="(objectClass=nTDSConnection)")
 
@@ -176,7 +178,8 @@ class cmd_drs_showrepl(Command):
             try:
                 c_server_res = self.samdb.search(base=c_server_dn, scope=ldb.SCOPE_BASE, attrs=["dnsHostName"])
                 c_server_dns = c_server_res[0]["dnsHostName"][0]
-            except ldb.LdbError, (errno, _):
+            except ldb.LdbError as e:
+                (errno, _) = e.args
                 if errno == ldb.ERR_NO_SUCH_OBJECT:
                     self.message("\tWARNING: Connection to DELETED server!")
                 c_server_dns = ""
@@ -230,7 +233,7 @@ class cmd_drs_kcc(Command):
         req1 = drsuapi.DsExecuteKCC1()
         try:
             self.drsuapi.DsExecuteKCC(self.drsuapi_handle, 1, req1)
-        except Exception, e:
+        except Exception as e:
             raise CommandError("DsExecuteKCC failed", e)
         self.message("Consistency check on %s successful." % DC)
 
@@ -270,7 +273,7 @@ def drs_local_replicate(self, SOURCE_DC, NC):
     rodc = self.local_samdb.am_rodc()
     try:
         repl.replicate(NC, source_dsa_invocation_id, destination_dsa_guid, rodc=rodc)
-    except Exception, e:
+    except Exception as e:
         raise CommandError("Error replicating DN %s" % NC, e)
     self.samdb.transaction_commit()
 
@@ -346,7 +349,7 @@ class cmd_drs_replicate(Command):
 
         try:
             drs_utils.sendDsReplicaSync(self.drsuapi, self.drsuapi_handle, source_dsa_guid, NC, req_options)
-        except drs_utils.drsException, estr:
+        except drs_utils.drsException as estr:
             raise CommandError("DsReplicaSync failed", estr)
         self.message("Replicate from %s to %s was successful." % (SOURCE_DC, DEST_DC))
 

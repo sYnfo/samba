@@ -16,6 +16,7 @@
 #
 
 """Tests for samba.dsdb."""
+from __future__ import absolute_import
 
 from samba.credentials import Credentials
 from samba.samdb import SamDB
@@ -77,7 +78,7 @@ class DsdbTests(TestCase):
             if o.attid == 13:
                 old_version = o.version
                 o.version = o.version + 1
-                o.local_usn = long(str(res[0]["uSNChanged"])) + 1
+                o.local_usn = int(str(res[0]["uSNChanged"])) + 1
         replBlob = ndr_pack(repl)
         msg = ldb.Message()
         msg.dn = res[0].dn
@@ -97,8 +98,8 @@ class DsdbTests(TestCase):
             if o.attid == 13:
                 old_version = o.version
                 o.version = o.version + 1
-                o.local_usn = long(str(res[0]["uSNChanged"])) + 1
-                o.originating_usn = long(str(res[0]["uSNChanged"])) + 1
+                o.local_usn = int(str(res[0]["uSNChanged"])) + 1
+                o.originating_usn = int(str(res[0]["uSNChanged"])) + 1
         replBlob = ndr_pack(repl)
         msg = ldb.Message()
         msg.dn = res[0].dn

@@ -18,6 +18,7 @@
 #
 
 """Tests for samba.tests.dcerpc.bare."""
+from __future__ import absolute_import
 
 from samba.dcerpc import ClientConnection
 import samba.tests

@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import absolute_import
+from __future__ import print_function
 
 # Unix SMB/CIFS implementation.
 # Copyright (C) Jelmer Vernooij <jelmer@samba.org> 2008
@@ -23,6 +25,6 @@ n = Node()
 (reply_from, names, addresses) = n.query_name("GANIEDA", "192.168.4.0",
                                               timeout=4)
 
-print "Received reply from %s:" % (reply_from, )
-print "Names: %r" % (names, )
-print "Addresses: %r" % (addresses, )
+print("Received reply from %s:" % (reply_from, ))
+print("Names: %r" % (names, ))
+print("Addresses: %r" % (addresses, ))

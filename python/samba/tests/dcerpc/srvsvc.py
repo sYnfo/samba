@@ -19,6 +19,7 @@
 #
 
 """Tests for samba.dcerpc.srvsvc."""
+from __future__ import absolute_import
 
 from samba.dcerpc import srvsvc
 from samba.tests import RpcInterfaceTestCase

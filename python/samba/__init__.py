@@ -19,6 +19,8 @@
 #
 
 """Samba 4."""
+from __future__ import absolute_import
+from __future__ import print_function
 
 __docformat__ = "restructuredText"
 
@@ -98,7 +100,7 @@ class Ldb(_Ldb):
 
         # TODO set debug
         def msg(l, text):
-            print text
+            print(text)
         #self.set_debug(msg)
 
         self.set_utf8_casefold()
@@ -109,7 +111,7 @@ class Ldb(_Ldb):
             if nosync_p is not None and nosync_p:
                 flags |= ldb.FLG_NOSYNC
 
-        self.set_create_perms(0600)
+        self.set_create_perms(0o600)
 
         if url is not None:
             self.connect(url, flags, options)
@@ -141,7 +143,8 @@ class Ldb(_Ldb):
         try:
             res = self.search(base=dn, scope=ldb.SCOPE_SUBTREE, attrs=[],
                       expression="(|(objectclass=user)(objectclass=computer))")
-        except ldb.LdbError, (errno, _):
+        except ldb.LdbError as e:
+            (errno, _) = e.args
             if errno == ldb.ERR_NO_SUCH_OBJECT:
                 # Ignore no such object errors
                 return
@@ -151,7 +154,8 @@ class Ldb(_Ldb):
         try:
             for msg in res:
                 self.delete(msg.dn, ["relax:0"])
-        except ldb.LdbError, (errno, _):
+        except ldb.LdbError as e:
+            (errno, _) = e.args
             if errno != ldb.ERR_NO_SUCH_OBJECT:
                 # Ignore no such object errors
                 raise
@@ -175,7 +179,8 @@ class Ldb(_Ldb):
                        [], controls=["show_deleted:0", "show_recycled:0"]):
             try:
                 self.delete(msg.dn, ["relax:0"])
-            except ldb.LdbError, (errno, _):
+            except ldb.LdbError as e:
+                (errno, _) = e.args
                 if errno != ldb.ERR_NO_SUCH_OBJECT:
                     # Ignore no such object errors
                     raise
@@ -190,7 +195,8 @@ class Ldb(_Ldb):
                      "@OPTIONS", "@PARTITION", "@KLUDGEACL"]:
             try:
                 self.delete(attr, ["relax:0"])
-            except ldb.LdbError, (errno, _):
+            except ldb.LdbError as e:
+                (errno, _) = e.args
                 if errno != ldb.ERR_NO_SUCH_OBJECT:
                     # Ignore missing dn errors
                     raise
@@ -203,7 +209,8 @@ class Ldb(_Ldb):
         for attr in ["@INDEXLIST", "@ATTRIBUTES"]:
             try:
                 self.delete(attr, ["relax:0"])
-            except ldb.LdbError, (errno, _):
+            except ldb.LdbError as e:
+                (errno, _) = e.args
                 if errno != ldb.ERR_NO_SUCH_OBJECT:
                     # Ignore missing dn errors
                     raise
@@ -362,7 +369,7 @@ def dn_from_dns_name(dnsdomain):
 def current_unix_time():
     return int(time.time())
 
-import _glue
+from . import _glue
 version = _glue.version
 interface_ips = _glue.interface_ips
 set_debug_level = _glue.set_debug_level

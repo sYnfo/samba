@@ -18,6 +18,7 @@
 #
 
 """Tests for samba.kcc.ldif_import_export"""
+from __future__ import absolute_import
 
 import samba
 import os

@@ -17,6 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import
+
 import samba
 import samba.getopt as options
 import ldb
@@ -65,10 +67,12 @@ def transfer_dns_role(outf, sambaopts, credopts, role, samdb):
                                   res[0]['fSMORoleOwner'][0])
                                   .get_extended_component('GUID')))
                 master_owner = str(ldb.Dn(samdb, res[0]['fSMORoleOwner'][0]))
-            except LdbError, (num, msg):
+            except LdbError as e:
+                (num, msg) = e.args
                 raise CommandError("GUID not found in partition naming master DN %s : %s \n" %
                                    (res[0]['fSMORoleOwner'][0], msg))
-    except LdbError, (num, msg):
+    except LdbError as e:
+        (num, msg) = e.args
         raise CommandError("DNS partion %s not found : %s" % (role, msg))
 
     if role == "domaindns":
@@ -99,7 +103,8 @@ def transfer_dns_role(outf, sambaopts, credopts, role, samdb):
 
         try:
             samdb.modify(m)
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             raise CommandError("Failed to delete role '%s': %s" %
                                (role, msg))
 
@@ -110,13 +115,14 @@ def transfer_dns_role(outf, sambaopts, credopts, role, samdb):
                                                "fSMORoleOwner")
         try:
             samdb.modify(m)
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             raise CommandError("Failed to add role '%s': %s" % (role, msg))
 
         try:
             connection = samba.drs_utils.drsuapi_connect(samdb.host_dns_name(),
                                                          lp, creds)
-        except samba.drs_utils.drsException, e:
+        except samba.drs_utils.drsException as e:
             raise CommandError("Drsuapi Connect failed", e)
 
         try:
@@ -128,7 +134,7 @@ def transfer_dns_role(outf, sambaopts, credopts, role, samdb):
                                               drsuapi_handle,
                                               master_guid,
                                               NC, req_options)
-        except samba.drs_utils.drsException, estr:
+        except samba.drs_utils.drsException as estr:
             raise CommandError("Replication failed", estr)
 
         outf.write("FSMO transfer of '%s' role successful\n" % role)
@@ -184,7 +190,8 @@ def transfer_role(outf, role, samdb):
     if master_owner != new_owner:
         try:
             samdb.modify(m)
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             raise CommandError("Transfer of '%s' role failed: %s" %
                                (role, msg))
 
@@ -270,7 +277,8 @@ You must provide an Admin user and password."""),
                     "fSMORoleOwner")
                 try:
                     samdb.modify(m)
-                except LdbError, (num, msg):
+                except LdbError as xxx_todo_changeme:
+                    (num, msg) = xxx_todo_changeme.args
                     raise CommandError("Failed to seize '%s' role: %s" %
                                        (role, msg))
                 self.outf.write("FSMO seize of '%s' role successful\n" % role)
@@ -317,7 +325,8 @@ You must provide an Admin user and password."""),
                     "fSMORoleOwner")
                 try:
                     samdb.modify(m)
-                except LdbError, (num, msg):
+                except LdbError as e:
+                    (num, msg) = e.args
                     raise CommandError("Failed to seize '%s' role: %s" %
                                        (role, msg))
                 self.outf.write("FSMO seize of '%s' role successful\n" % role)

@@ -16,6 +16,7 @@
 #
 
 """Tests for samba.netcmd."""
+from __future__ import absolute_import
 
 from cStringIO import StringIO
 from samba.netcmd import Command
@@ -29,7 +30,7 @@ class NetCmdTestCase(samba.tests.TestCase):
         cmd = cmd_klass(outf=StringIO(), errf=StringIO())
         try:
             retval = cmd._run(cmd_klass.__name__, *args)
-        except Exception, e:
+        except Exception as e:
             cmd.show_command_error(e)
             retval = 1
         self.assertEquals(retcode, retval)

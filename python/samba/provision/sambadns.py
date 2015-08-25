@@ -19,6 +19,7 @@
 #
 
 """DNS-related provisioning"""
+from __future__ import absolute_import
 
 import os
 import uuid
@@ -681,15 +682,15 @@ def create_dns_dir(logger, paths):
     except OSError:
         pass
 
-    os.mkdir(dns_dir, 0770)
+    os.mkdir(dns_dir, 0o770)
 
     if paths.bind_gid is not None:
         try:
             os.chown(dns_dir, -1, paths.bind_gid)
             # chmod needed to cope with umask
-            os.chmod(dns_dir, 0770)
+            os.chmod(dns_dir, 0o770)
         except OSError:
-            if not os.environ.has_key('SAMBA_SELFTEST'):
+            if 'SAMBA_SELFTEST' not in os.environ:
                 logger.error("Failed to chown %s to bind gid %u" % (
                     dns_dir, paths.bind_gid))
 
@@ -754,9 +755,9 @@ def create_zone_file(lp, logger, paths, targetdir, dnsdomain,
         try:
             os.chown(paths.dns, -1, paths.bind_gid)
             # chmod needed to cope with umask
-            os.chmod(paths.dns, 0664)
+            os.chmod(paths.dns, 0o664)
         except OSError:
-            if not os.environ.has_key('SAMBA_SELFTEST'):
+            if 'SAMBA_SELFTEST' not in os.environ:
                 logger.error("Failed to chown %s to bind gid %u" % (
                     paths.dns, paths.bind_gid))
 
@@ -784,7 +785,7 @@ def create_samdb_copy(samdb, logger, paths, names, domainsid, domainguid):
     domainpart_file = os.path.join(dns_dir, partfile[domaindn])
     try:
         os.mkdir(dns_samldb_dir)
-        file(domainpart_file, 'w').close()
+        open(domainpart_file, 'w').close()
 
         # Fill the basedn and @OPTION records in domain partition
         dom_ldb = samba.Ldb(domainpart_file)
@@ -853,24 +854,24 @@ def create_samdb_copy(samdb, logger, paths, names, domainsid, domainguid):
     if paths.bind_gid is not None:
         try:
             os.chown(samldb_dir, -1, paths.bind_gid)
-            os.chmod(samldb_dir, 0750)
+            os.chmod(samldb_dir, 0o750)
 
             for dirname, dirs, files in os.walk(dns_dir):
                 for d in dirs:
                     dpath = os.path.join(dirname, d)
                     os.chown(dpath, -1, paths.bind_gid)
-                    os.chmod(dpath, 0770)
+                    os.chmod(dpath, 0o770)
                 for f in files:
                     if f.endswith('.ldb') or f.endswith('.tdb'):
                         fpath = os.path.join(dirname, f)
                         os.chown(fpath, -1, paths.bind_gid)
-                        os.chmod(fpath, 0660)
+                        os.chmod(fpath, 0o660)
         except OSError:
-            if not os.environ.has_key('SAMBA_SELFTEST'):
+            if 'SAMBA_SELFTEST' not in os.environ:
                 logger.error(
                     "Failed to set permissions to sam.ldb* files, fix manually")
     else:
-        if not os.environ.has_key('SAMBA_SELFTEST'):
+        if 'SAMBA_SELFTEST' not in os.environ:
             logger.warning("""Unable to find group id for BIND,
                 set permissions to sam.ldb* files manually""")
 

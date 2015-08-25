@@ -16,6 +16,7 @@
 #
 
 """Blackbox tests for samba-tool drs."""
+from __future__ import absolute_import
 
 import samba.tests
 

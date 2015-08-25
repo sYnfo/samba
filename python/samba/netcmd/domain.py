@@ -22,6 +22,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import samba.getopt as options
 import ldb
 import string
@@ -308,9 +311,9 @@ class cmd_domain_provision(Command):
 
             def ask(prompt, default=None):
                 if default is not None:
-                    print "%s [%s]: " % (prompt, default),
+                    print("%s [%s]: " % (prompt, default), end=' ')
                 else:
-                    print "%s: " % (prompt,),
+                    print("%s: " % (prompt,), end=' ')
                 return sys.stdin.readline().rstrip("\n") or default
 
             try:
@@ -441,7 +444,7 @@ class cmd_domain_provision(Command):
                   ldap_backend_forced_uri=ldap_backend_forced_uri,
                   nosync=ldap_backend_nosync, ldap_dryrun_mode=ldap_dryrun_mode)
 
-        except ProvisioningError, e:
+        except ProvisioningError as e:
             raise CommandError("Provision failed", e)
 
         result.report_logger(self.logger)
@@ -718,7 +721,7 @@ class cmd_domain_demote(Command):
                             samdb.get_root_basedn()):
                 try:
                     sendDsReplicaSync(drsuapiBind, drsuapi_handle, ntds_guid, str(part), drsuapi.DRSUAPI_DRS_WRIT_REP)
-                except drsException, e:
+                except drsException as e:
                     self.errf.write(
                         "Error while demoting, "
                         "re-enabling inbound replication\n")
@@ -739,7 +742,7 @@ class cmd_domain_demote(Command):
             dc_dn = res[0].dn
             uac = int(str(res[0]["userAccountControl"]))
 
-        except Exception, e:
+        except Exception as e:
             self.errf.write(
                 "Error while demoting, re-enabling inbound replication\n")
             dsa_options ^= DS_NTDSDSA_OPT_DISABLE_INBOUND_REPL
@@ -769,7 +772,7 @@ class cmd_domain_demote(Command):
                                                         "userAccountControl")
         try:
             remote_samdb.modify(msg)
-        except Exception, e:
+        except Exception as e:
             self.errf.write(
                 "Error while demoting, re-enabling inbound replication")
             dsa_options ^= DS_NTDSDSA_OPT_DISABLE_INBOUND_REPL
@@ -821,7 +824,7 @@ class cmd_domain_demote(Command):
         try:
             newdn = ldb.Dn(remote_samdb, "%s,%s" % (newrdn, str(computer_dn)))
             remote_samdb.rename(dc_dn, newdn)
-        except Exception, e:
+        except Exception as e:
             self.errf.write(
                 "Error while demoting, re-enabling inbound replication\n")
             dsa_options ^= DS_NTDSDSA_OPT_DISABLE_INBOUND_REPL
@@ -844,7 +847,7 @@ class cmd_domain_demote(Command):
 
         try:
             sendRemoveDsServer(drsuapiBind, drsuapi_handle, server_dsa_dn, domain)
-        except drsException, e:
+        except drsException as e:
             self.errf.write(
                 "Error while demoting, re-enabling inbound replication\n")
             dsa_options ^= DS_NTDSDSA_OPT_DISABLE_INBOUND_REPL
@@ -857,7 +860,7 @@ class cmd_domain_demote(Command):
             msg["userAccountControl"] = ldb.MessageElement("%d" % uac,
                                                     ldb.FLAG_MOD_REPLACE,
                                                     "userAccountControl")
-            print str(dc_dn)
+            print(str(dc_dn))
             remote_samdb.modify(msg)
             remote_samdb.rename(newdn, dc_dn)
             raise CommandError("Error while sending a removeDsServer", e)
@@ -868,7 +871,7 @@ class cmd_domain_demote(Command):
             try:
                 remote_samdb.delete(ldb.Dn(remote_samdb,
                                     "%s,%s,%s" % (str(rdn), s, str(remote_samdb.get_root_basedn()))))
-            except ldb.LdbError, l:
+            except ldb.LdbError as l:
                 pass
 
         for s in ("CN=Enterprise,CN=NTFRS Subscriptions",
@@ -878,7 +881,7 @@ class cmd_domain_demote(Command):
             try:
                 remote_samdb.delete(ldb.Dn(remote_samdb,
                                     "%s,%s" % (s, str(newdn))))
-            except ldb.LdbError, l:
+            except ldb.LdbError as l:
                 pass
 
         self.errf.write("Demote successful\n")
@@ -1037,7 +1040,8 @@ class cmd_domain_level(Command):
                       ldb.FLAG_MOD_REPLACE, "nTMixedDomain")
                     try:
                         samdb.modify(m)
-                    except ldb.LdbError, (enum, emsg):
+                    except ldb.LdbError as e:
+                        (enum, emsg) = e.args
                         if enum != ldb.ERR_UNWILLING_TO_PERFORM:
                             raise
 
@@ -1057,7 +1061,8 @@ class cmd_domain_level(Command):
                           "msDS-Behavior-Version")
                 try:
                     samdb.modify(m)
-                except ldb.LdbError, (enum, emsg):
+                except ldb.LdbError as e:
+                    (enum, emsg) = e.args
                     if enum != ldb.ERR_UNWILLING_TO_PERFORM:
                         raise
 
@@ -1166,7 +1171,7 @@ class cmd_domain_passwordsettings(Command):
             else:
                 cur_account_lockout_duration = abs(int(res[0]["lockoutDuration"][0])) / (1e7 * 60)
             cur_reset_account_lockout_after = abs(int(res[0]["lockOutObservationWindow"][0])) / (1e7 * 60)
-        except Exception, e:
+        except Exception as e:
             raise CommandError("Could not retrieve password properties!", e)
 
         if subcommand == "show":

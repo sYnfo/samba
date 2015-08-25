@@ -17,6 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import
+
 import samba.getopt as options
 import ldb
 import pwd
@@ -195,7 +197,7 @@ Example5 shows how to create an RFC2307/NIS domain enabled user account. If
                           nisdomain=nis_domain, unixhome=unix_home, uid=uid,
                           uidnumber=uid_number, gidnumber=gid_number,
                           gecos=gecos, loginshell=login_shell)
-        except Exception, e:
+        except Exception as e:
             raise CommandError("Failed to add user '%s': " % username, e)
 
         self.outf.write("User '%s' created successfully\n" % username)
@@ -257,7 +259,7 @@ Example2 shows how to delete a user in the domain against the local server.   su
             samdb = SamDB(url=H, session_info=system_session(),
                           credentials=creds, lp=lp)
             samdb.deleteuser(username)
-        except Exception, e:
+        except Exception as e:
             raise CommandError('Failed to remove user "%s"' % username, e)
         self.outf.write("Deleted user %s\n" % username)
 
@@ -361,7 +363,7 @@ Example3 shows how to enable a user in the domain against a local LDAP server.  
             credentials=creds, lp=lp)
         try:
             samdb.enable_account(filter)
-        except Exception, msg:
+        except Exception as msg:
             raise CommandError("Failed to enable user '%s': %s" % (username or filter, msg))
         self.outf.write("Enabled user '%s'\n" % (username or filter))
 
@@ -400,7 +402,7 @@ class cmd_user_disable(Command):
             credentials=creds, lp=lp)
         try:
             samdb.disable_account(filter)
-        except Exception, msg:
+        except Exception as msg:
             raise CommandError("Failed to disable user '%s': %s" % (username or filter, msg))
 
 
@@ -467,7 +469,7 @@ Example4 shows how to set the account expiration so that it will never expire.  
 
         try:
             samdb.setexpiry(filter, days*24*3600, no_expiry_req=noexpiry)
-        except Exception, msg:
+        except Exception as msg:
             # FIXME: Catch more specific exception
             raise CommandError("Failed to set expiry for user '%s': %s" % (
                 username or filter, msg))
@@ -518,7 +520,7 @@ class cmd_user_password(Command):
 
         try:
             net.change_password(password)
-        except Exception, msg:
+        except Exception as msg:
             # FIXME: catch more specific exception
             raise CommandError("Failed to change password : %s" % msg)
         self.outf.write("Changed password OK\n")
@@ -605,7 +607,7 @@ Example3 shows how an administrator would reset TestUser3 user's password to pas
             samdb.setpassword(filter, password,
                               force_change_at_next_login=must_change_at_next_login,
                               username=username)
-        except Exception, msg:
+        except Exception as msg:
             # FIXME: catch more specific exception
             raise CommandError("Failed to set password for user '%s': %s" % (username or filter, msg))
         self.outf.write("Changed password OK\n")

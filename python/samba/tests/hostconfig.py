@@ -16,6 +16,7 @@
 #
 
 """Tests for samba.hostconfig."""
+from __future__ import absolute_import
 
 from samba.hostconfig import SharesContainer
 from samba.tests import TestCase

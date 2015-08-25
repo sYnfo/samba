@@ -21,6 +21,7 @@
 #
 
 """Convenience functions for using the SAM."""
+from __future__ import absolute_import
 
 import samba
 import ldb
@@ -31,6 +32,7 @@ from samba import dsdb
 from samba.ndr import ndr_unpack, ndr_pack
 from samba.dcerpc import drsblobs, misc
 from samba.common import normalise_int32
+import six
 
 __docformat__ = "restructuredText"
 
@@ -414,8 +416,8 @@ member: %s
             ldbmessage["nTSecurityDescriptor"] = ndr_pack(sd)
 
         ldbmessage2 = None
-        if any(map(lambda b: b is not None, (uid, uidnumber, gidnumber, gecos,
-                loginshell, nisdomain, unixhome))):
+        if any([b is not None for b in (uid, uidnumber, gidnumber, gecos,
+                loginshell, nisdomain, unixhome)]):
             ldbmessage2 = ldb.Message()
             ldbmessage2.dn = ldb.Dn(self, user_dn)
             ldbmessage2["objectClass"] = ldb.MessageElement('posixAccount', ldb.FLAG_MOD_ADD, 'objectClass')
@@ -497,7 +499,7 @@ member: %s
             if len(res) > 1:
                 raise Exception('Matched %u multiple users with filter "%s"' % (len(res), search_filter))
             user_dn = res[0].dn
-            pw = unicode('"' + password + '"', 'utf-8').encode('utf-16-le')
+            pw = six.text_type('"' + password + '"', 'utf-8').encode('utf-16-le')
             setpw = """
 dn: %s
 changetype: modify
@@ -678,7 +680,7 @@ accountExpires: %u
         """
         if len(self.hash_oid_name.keys()) == 0:
             self._populate_oid_attid()
-        if self.hash_oid_name.has_key(self.get_oid_from_attid(attid)):
+        if self.get_oid_from_attid(attid) in self.hash_oid_name:
             return self.hash_oid_name[self.get_oid_from_attid(attid)]
         else:
             return None
@@ -724,7 +726,7 @@ accountExpires: %u
         for o in ctr.array:
             # Search for Description
             att_oid = self.get_oid_from_attid(o.attid)
-            if self.hash_oid_name.has_key(att_oid) and\
+            if att_oid in self.hash_oid_name and\
                att.lower() == self.hash_oid_name[att_oid].lower():
                 return o.version
         return None
@@ -748,7 +750,7 @@ accountExpires: %u
         for o in ctr.array:
             # Search for Description
             att_oid = self.get_oid_from_attid(o.attid)
-            if self.hash_oid_name.has_key(att_oid) and\
+            if att_oid in self.hash_oid_name and\
                att.lower() == self.hash_oid_name[att_oid].lower():
                 found = True
                 seq = self.sequence_number(ldb.SEQ_NEXT)

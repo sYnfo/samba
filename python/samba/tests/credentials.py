@@ -20,6 +20,7 @@
 Note that this just tests the bindings work. It does not intend to test
 the functionality, that's already done in other tests.
 """
+from __future__ import absolute_import
 
 from samba import credentials
 import samba.tests

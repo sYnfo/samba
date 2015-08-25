@@ -18,6 +18,7 @@
 """Tests for option parsing.
 
 """
+from __future__ import absolute_import
 
 import optparse
 from samba.getopt import (

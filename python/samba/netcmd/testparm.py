@@ -30,6 +30,8 @@
 # Useful for a quick 'syntax check' of a configuration file.
 #
 
+from __future__ import absolute_import
+
 import os
 import sys
 
@@ -84,7 +86,7 @@ class cmd_testparm(Command):
 
         try:
             lp = sambaopts.get_loadparm()
-        except RuntimeError, err:
+        except RuntimeError as err:
             raise CommandError(err)
 
         # We need this to force the output

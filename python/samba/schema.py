@@ -21,6 +21,7 @@
 #
 
 """Functions for setting up a Samba Schema."""
+from __future__ import absolute_import
 
 from base64 import b64encode
 from samba import read_and_sub_file, substitute_var, check_all_substituted

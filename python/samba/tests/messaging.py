@@ -18,6 +18,8 @@
 #
 
 """Tests for samba.messaging."""
+from __future__ import absolute_import
+from __future__ import print_function
 import samba
 from samba.messaging import Messaging
 from samba.tests import TestCase
@@ -54,12 +56,12 @@ class MessagingTests(TestCase):
         def ping_callback(src, data):
                 server_ctx.send(src, data)
         def exit_callback():
-                print "received exit"
+                print("received exit")
         msg_ping = server_ctx.register(ping_callback)
         msg_exit = server_ctx.register(exit_callback)
 
         def pong_callback():
-                print "received pong"
+                print("received pong")
         client_ctx = self.get_context((0, 2))
         msg_pong = client_ctx.register(pong_callback)
 

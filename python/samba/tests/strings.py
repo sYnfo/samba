@@ -24,7 +24,9 @@
 #
 # -- mbp
 
-from unicodenames import *
+from __future__ import absolute_import
+
+from .unicodenames import *
 
 import samba.tests
 from samba import strcasecmp_m, strstr_m

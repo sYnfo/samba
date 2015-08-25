@@ -18,6 +18,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import re
 
 def __read_folded_line(f, buffer):
@@ -81,7 +84,7 @@ def __read_raw_entries(f):
 
                 entry.append(l)
             else:
-                print >>sys.stderr, "Invalid line: %s" % l,
+                print("Invalid line: %s" % l, end=' ', file=sys.stderr)
                 sys.exit(1)
 
         if len(entry):
@@ -180,8 +183,8 @@ if __name__ == '__main__':
     try:
         display_specifiers_file = sys.argv[1]
     except IndexError:
-        print >>sys.stderr, "Usage: %s display-specifiers-ldif-file.txt" % (sys.argv[0])
+        print("Usage: %s display-specifiers-ldif-file.txt" % (sys.argv[0]), file=sys.stderr)
         sys.exit(1)
 
-    print read_ms_ldif(display_specifiers_file)
+    print(read_ms_ldif(display_specifiers_file))
 

@@ -16,6 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import
+
 import os
 from samba import sites
 from samba.samdb import SamDB
@@ -55,7 +57,7 @@ class cmd_sites_create(Command):
         try:
             ok = sites.create_site(samdb, samdb.get_config_basedn(), sitename)
             samdb.transaction_commit()
-        except sites.SiteAlreadyExistsException, e:
+        except sites.SiteAlreadyExistsException as e:
             samdb.transaction_cancel()
             raise CommandError("Error while creating site %s, error: %s" % (sitename, str(e)))
 
@@ -88,7 +90,7 @@ class cmd_sites_delete(Command):
         try:
             ok = sites.delete_site(samdb, samdb.get_config_basedn(), sitename)
             samdb.transaction_commit()
-        except sites.SiteException, e:
+        except sites.SiteException as e:
             samdb.transaction_cancel()
             raise CommandError(
                 "Error while removing site %s, error: %s" % (sitename, str(e)))

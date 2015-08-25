@@ -16,6 +16,7 @@
 #
 
 """Tests for samba.dcerpc.dnsserver"""
+from __future__ import absolute_import
 
 from samba.dcerpc import dnsp, dnsserver
 from samba.tests import RpcInterfaceTestCase, env_get_var_value

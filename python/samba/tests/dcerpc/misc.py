@@ -16,6 +16,7 @@
 #
 
 """Tests for samba.dcerpc.misc."""
+from __future__ import absolute_import
 
 from samba.dcerpc import misc
 import samba.tests

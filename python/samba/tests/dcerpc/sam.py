@@ -18,12 +18,14 @@
 #
 
 """Tests for samba.dcerpc.sam."""
+from __future__ import absolute_import
 
 from samba.dcerpc import samr, security
 from samba.tests import RpcInterfaceTestCase
 
 # FIXME: Pidl should be doing this for us
-def toArray((handle, array, num_entries)):
+def toArray(arguments):
+    (handle, array, num_entries) = arguments
     ret = []
     for x in range(num_entries):
         ret.append((array.entries[x].idx, array.entries[x].name))

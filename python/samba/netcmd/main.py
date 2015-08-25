@@ -16,6 +16,7 @@
 #
 
 """The main samba-tool command implementation."""
+from __future__ import absolute_import
 
 from samba import getopt as options
 

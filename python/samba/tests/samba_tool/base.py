@@ -21,6 +21,8 @@
 #
 # These can all be accesses via os.environ["VARIBLENAME"] when needed
 
+from __future__ import absolute_import
+
 import random
 import string
 from samba.auth import system_session

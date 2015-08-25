@@ -16,6 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import
+
 from samba.netcmd import Command, CommandError, Option, SuperCommand
 import samba.getopt as options
 from samba.samdb import SamDB
@@ -96,7 +98,7 @@ class cmd_rodc_preload(Command):
         try:
             repl.replicate(dn, source_dsa_invocation_id, destination_dsa_guid,
                            exop=drsuapi.DRSUAPI_EXOP_REPL_SECRET, rodc=True)
-        except Exception, e:
+        except Exception as e:
             local_samdb.transaction_cancel()
             raise CommandError("Error replicating DN %s" % dn, e)
         local_samdb.transaction_commit()

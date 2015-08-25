@@ -16,6 +16,7 @@
 #
 
 """Tests for samba.common"""
+from __future__ import absolute_import
 
 import samba, os
 import samba.tests

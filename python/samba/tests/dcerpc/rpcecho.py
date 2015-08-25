@@ -16,6 +16,7 @@
 #
 
 """Tests for samba.dceprc.rpcecho."""
+from __future__ import absolute_import
 
 from samba.dcerpc import echo
 from samba.ndr import ndr_pack, ndr_unpack

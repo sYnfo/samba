@@ -23,6 +23,7 @@
 #
 
 """Functions for setting up a Samba configuration."""
+from __future__ import absolute_import
 
 __docformat__ = "restructuredText"
 
@@ -421,7 +422,8 @@ def get_last_provision_usn(sam):
         entry = sam.search(expression="%s=*" % LAST_PROVISION_USN_ATTRIBUTE,
                        base="@PROVISION", scope=ldb.SCOPE_BASE,
                        attrs=[LAST_PROVISION_USN_ATTRIBUTE, "provisionnerID"])
-    except ldb.LdbError, (ecode, emsg):
+    except ldb.LdbError as e:
+        (ecode, emsg) = e.args
         if ecode == ldb.ERR_NO_SUCH_OBJECT:
             return None
         raise
@@ -1152,7 +1154,7 @@ def getpolicypath(sysvolpath, dnsdomain, guid):
 
 def create_gpo_struct(policy_path):
     if not os.path.exists(policy_path):
-        os.makedirs(policy_path, 0775)
+        os.makedirs(policy_path, 0o775)
     f = open(os.path.join(policy_path, "GPT.INI"), 'w')
     try:
         f.write("[General]\r\nVersion=0")
@@ -1160,10 +1162,10 @@ def create_gpo_struct(policy_path):
         f.close()
     p = os.path.join(policy_path, "MACHINE")
     if not os.path.exists(p):
-        os.makedirs(p, 0775)
+        os.makedirs(p, 0o775)
     p = os.path.join(policy_path, "USER")
     if not os.path.exists(p):
-        os.makedirs(p, 0775)
+        os.makedirs(p, 0o775)
 
 
 def create_default_gpo(sysvolpath, dnsdomain, policyguid, policyguid_dc):
@@ -1212,7 +1214,8 @@ def setup_samdb(path, session_info, provision_backend, lp, names,
     # DB
     try:
         samdb.connect(path)
-    except ldb.LdbError, (num, string_error):
+    except ldb.LdbError as e:
+        (num, string_error) = e.args
         if (num == ldb.ERR_INSUFFICIENT_ACCESS_RIGHTS):
             raise ProvisioningError("Permission denied connecting to %s, are you running as root?" % path)
         else:
@@ -1546,7 +1549,7 @@ def setsysvolacl(samdb, netlogon, sysvol, uid, gid, domainsid, dnsdomain,
         file = tempfile.NamedTemporaryFile(dir=os.path.abspath(sysvol))
         try:
             try:
-                smbd.set_simple_acl(file.name, 0755, gid)
+                smbd.set_simple_acl(file.name, 0o755, gid)
             except OSError:
                 if not smbd.have_posix_acls():
                     # This clue is only strictly correct for RPM and
@@ -1825,7 +1828,8 @@ def provision_fill(samdb, secrets_ldb, logger, names, paths,
                 elements=kerberos_enctypes, flags=ldb.FLAG_MOD_REPLACE,
                 name="msDS-SupportedEncryptionTypes")
             samdb.modify(msg)
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             if enum != ldb.ERR_NO_SUCH_ATTRIBUTE:
                 # It might be that this attribute does not exist in this schema
                 raise
@@ -2064,12 +2068,12 @@ def provision(logger, session_info, smbconf=None,
     if not os.path.exists(paths.private_dir):
         os.mkdir(paths.private_dir)
     if not os.path.exists(os.path.join(paths.private_dir, "tls")):
-        os.makedirs(os.path.join(paths.private_dir, "tls"), 0700)
+        os.makedirs(os.path.join(paths.private_dir, "tls"), 0o700)
     if not os.path.exists(paths.state_dir):
         os.mkdir(paths.state_dir)
 
     if paths.sysvol and not os.path.exists(paths.sysvol):
-        os.makedirs(paths.sysvol, 0775)
+        os.makedirs(paths.sysvol, 0o775)
 
     ldapi_url = "ldapi://%s" % urllib.quote(paths.s4_ldapi_path, safe="")
 
@@ -2148,7 +2152,7 @@ def provision(logger, session_info, smbconf=None,
                 raise MissingShareError("sysvol", paths.smbconf)
 
             if not os.path.isdir(paths.netlogon):
-                os.makedirs(paths.netlogon, 0755)
+                os.makedirs(paths.netlogon, 0o755)
 
         if adminpass is None:
             adminpass = samba.generate_random_password(12, 32)
@@ -2194,10 +2198,10 @@ def provision(logger, session_info, smbconf=None,
     dns_keytab_path = os.path.join(paths.private_dir, paths.dns_keytab)
     if os.path.isfile(dns_keytab_path) and paths.bind_gid is not None:
         try:
-            os.chmod(dns_keytab_path, 0640)
+            os.chmod(dns_keytab_path, 0o640)
             os.chown(dns_keytab_path, -1, paths.bind_gid)
         except OSError:
-            if not os.environ.has_key('SAMBA_SELFTEST'):
+            if 'SAMBA_SELFTEST' not in os.environ:
                 logger.info("Failed to chown %s to bind gid %u",
                             dns_keytab_path, paths.bind_gid)
 

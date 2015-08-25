@@ -16,6 +16,7 @@
 #
 
 """Tests for samba.registry."""
+from __future__ import absolute_import
 
 import os
 from samba import registry

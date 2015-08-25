@@ -24,6 +24,8 @@
 # Useful for a quick 'syntax check' of a configuration file.
 #
 
+from __future__ import absolute_import
+
 import os
 import sys
 

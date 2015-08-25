@@ -16,6 +16,7 @@
 #
 
 """Samba Python tests."""
+from __future__ import absolute_import
 
 import ldb
 import os

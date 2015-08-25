@@ -16,6 +16,7 @@
 #
 
 """Tests for samba.xattr_native and samba.xattr_tdb."""
+from __future__ import absolute_import
 
 import samba.xattr_native, samba.xattr_tdb
 from samba.xattr import copytree_with_xattrs

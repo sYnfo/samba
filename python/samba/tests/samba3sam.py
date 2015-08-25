@@ -19,6 +19,8 @@
 #
 
 """Tests for the samba3sam LDB module, which maps Samba3 LDAP to AD LDAP."""
+from __future__ import absolute_import
+from __future__ import print_function
 
 import os
 import ldb
@@ -41,7 +43,7 @@ def read_datafile(filename):
     return open(os.path.join(datadir, filename), 'r').read()
 
 def ldb_debug(l, text):
-    print text
+    print(text)
 
 
 class MapBaseTestCase(TestCaseInTempDir):

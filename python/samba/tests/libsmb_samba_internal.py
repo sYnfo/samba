@@ -16,6 +16,7 @@
 #
 
 """Tests for samba.samba3.libsmb_samba_internal."""
+from __future__ import absolute_import
 
 from samba.samba3 import libsmb_samba_internal
 from samba.dcerpc import security

@@ -18,6 +18,7 @@
 #
 
 """Tests for samba.kcc.graph_utils"""
+from __future__ import absolute_import
 
 import samba
 import samba.tests

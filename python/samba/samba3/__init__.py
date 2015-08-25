@@ -16,6 +16,7 @@
 #
 
 """Support for reading Samba 3 data files."""
+from __future__ import absolute_import
 
 __docformat__ = "restructuredText"
 
@@ -26,7 +27,7 @@ import os
 import struct
 import tdb
 
-import passdb
+from . import passdb
 import param as s3param
 
 

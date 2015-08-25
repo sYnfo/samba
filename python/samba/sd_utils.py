@@ -17,6 +17,7 @@
 #
 
 """Utility methods for security descriptor manipulation."""
+from __future__ import absolute_import
 
 import samba
 from ldb import Message, MessageElement, Dn

@@ -16,6 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import
+
 import samba.getopt as options
 from struct import pack
 from socket import inet_ntoa
@@ -618,7 +620,7 @@ def dns_record_match(dns_conn, server, zone, name, record_type, data):
         buflen, res = dns_conn.DnssrvEnumRecords2(
             dnsserver.DNS_CLIENT_VERSION_LONGHORN, 0, server, zone, name, None,
             record_type, select_flags, None, None)
-    except RuntimeError, e:
+    except RuntimeError as e:
         return None
 
     if not res or res.count == 0:

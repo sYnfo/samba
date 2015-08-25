@@ -24,6 +24,7 @@
 #    trial samba.tests.dcerpc.rpc_talloc
 
 """Tests for the talloc handling in the generated Python DCE/RPC bindings."""
+from __future__ import absolute_import
 
 import sys
 

@@ -16,6 +16,7 @@
 #
 
 """Tests for samba.upgrade."""
+from __future__ import absolute_import
 
 from samba.upgrade import import_wins
 from samba.tests import LdbTestCase

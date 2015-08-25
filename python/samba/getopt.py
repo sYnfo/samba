@@ -16,6 +16,8 @@
 #
 
 """Support for parsing Samba-related command-line options."""
+from __future__ import absolute_import
+from __future__ import print_function
 
 __docformat__ = "restructuredText"
 
@@ -78,7 +80,7 @@ class SambaOptions(optparse.OptionGroup):
         a = arg.split('=')
         try:
             self._lp.set(a[0], a[1])
-        except Exception, e:
+        except Exception as e:
             raise optparse.OptionValueError(
                 "invalid --option option value %r: %s" % (arg, e))
 
@@ -106,7 +108,7 @@ class VersionOptions(optparse.OptionGroup):
 
     def _display_version(self, option, opt_str, arg, parser):
         import samba
-        print samba.version
+        print(samba.version)
         sys.exit(0)
 
 

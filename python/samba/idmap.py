@@ -17,6 +17,7 @@
 #
 
 """Convenience functions for using the idmap database."""
+from __future__ import absolute_import
 
 __docformat__ = "restructuredText"
 

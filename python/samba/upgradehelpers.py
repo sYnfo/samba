@@ -20,6 +20,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """Helpers used for upgrading between different database formats."""
+from __future__ import absolute_import
+from __future__ import print_function
 
 import os
 import re
@@ -345,7 +347,7 @@ def update_secrets(newsecrets_ldb, secrets_ldb, messagefunc):
         hash[str(current[i]["dn"]).lower()] = current[i]["dn"]
 
     for k in hash_new.keys():
-        if not hash.has_key(k):
+        if k not in hash:
             listMissing.append(hash_new[k])
         else:
             listPresent.append(hash_new[k])
@@ -481,7 +483,7 @@ def increment_calculated_keyversion_number(samdb, rootdn, hashDns):
         raise ProvisioningError("Unable to find msDs-KeyVersionNumber")
     else:
         for e in entry:
-            if hashDns.has_key(str(e.dn).lower()):
+            if str(e.dn).lower() in hashDns:
                 val = e.get("msDs-KeyVersionNumber")
                 if not val:
                     val = "0"
@@ -682,7 +684,7 @@ def search_constructed_attrs_stored(samdb, rootdn, attrs):
     for ent in entry:
         for att in attrs:
             if ent.get(att):
-                if hashAtt.has_key(att):
+                if att in hashAtt:
                     hashAtt[att][str(ent.dn).lower()] = str(ent[att])
                 else:
                     hashAtt[att] = {}
@@ -771,9 +773,9 @@ def print_provision_ranges(dic, limit_print, dest, samdb_path, invocationid):
             obj = hash_ts[k]
             if obj["num"] > limit_print:
                 dt = _glue.nttime2string(_glue.unix2nttime(k*60))
-                print "%s # of modification: %d  \tmin: %d max: %d" % (dt , obj["num"],
+                print("%s # of modification: %d  \tmin: %d max: %d" % (dt , obj["num"],
                                                                     obj["min"],
-                                                                    obj["max"])
+                                                                    obj["max"]))
             if hash_ts[k]["num"] > 600:
                 kept_record.append(k)
 
@@ -798,11 +800,11 @@ def print_provision_ranges(dic, limit_print, dest, samdb_path, invocationid):
 
     if ldif != "":
         file = tempfile.mktemp(dir=dest, prefix="usnprov", suffix=".ldif")
-        print
-        print "To track the USNs modified/created by provision and upgrade proivsion,"
-        print " the following ranges are proposed to be added to your provision sam.ldb: \n%s" % ldif
-        print "We recommend to review them, and if it's correct to integrate the following ldif: %s in your sam.ldb" % file
-        print "You can load this file like this: ldbadd -H %s %s\n"%(str(samdb_path),file)
+        print()
+        print("To track the USNs modified/created by provision and upgrade proivsion,")
+        print(" the following ranges are proposed to be added to your provision sam.ldb: \n%s" % ldif)
+        print("We recommend to review them, and if it's correct to integrate the following ldif: %s in your sam.ldb" % file)
+        print("You can load this file like this: ldbadd -H %s %s\n"%(str(samdb_path),file))
         ldif = "dn: @PROVISION\nprovisionnerID: %s\n%s" % (invocationid, ldif)
         open(file,'w').write(ldif)
 
@@ -813,6 +815,6 @@ def int64range2str(value):
     :return: A string of the representation of the range
     """
 
-    lvalue = long(value)
+    lvalue = int(value)
     str = "%d-%d" % (lvalue&0xFFFFFFFF, lvalue>>32)
     return str

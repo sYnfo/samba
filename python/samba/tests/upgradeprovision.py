@@ -16,6 +16,7 @@
 #
 
 """Tests for samba.upgradeprovision."""
+from __future__ import absolute_import
 
 import os
 from samba.upgradehelpers import (usn_in_range, dn_sort,

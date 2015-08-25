@@ -20,6 +20,8 @@
 Note that this just tests the bindings work. It does not intend to test
 the functionality, that's already done in other tests.
 """
+from __future__ import absolute_import
+from __future__ import print_function
 
 from samba.credentials import Credentials
 from samba import gensec, auth
@@ -71,10 +73,10 @@ class GensecTests(samba.tests.TestCase):
         """Run the actual call loop"""
         while not client_finished and not server_finished:
             if not client_finished:
-                print "running client gensec_update"
+                print("running client gensec_update")
                 (client_finished, client_to_server) = self.gensec_client.update(server_to_client)
             if not server_finished:
-                print "running server gensec_update"
+                print("running server gensec_update")
                 (server_finished, server_to_client) = self.gensec_server.update(client_to_server)
         session_info = self.gensec_server.session_info()
 
@@ -121,10 +123,10 @@ class GensecTests(samba.tests.TestCase):
         while not client_finished or not server_finished:
             i += 1
             if not client_finished:
-                print "running client gensec_update: %d: %r" % (len(server_to_client), server_to_client)
+                print("running client gensec_update: %d: %r" % (len(server_to_client), server_to_client))
                 (client_finished, client_to_server) = self.gensec_client.update(server_to_client)
             if not server_finished:
-                print "running server gensec_update: %d: %r" % (len(client_to_server), client_to_server)
+                print("running server gensec_update: %d: %r" % (len(client_to_server), client_to_server))
                 (server_finished, server_to_client) = self.gensec_server.update(client_to_server)
 
         """Here we expect a lot more than the typical 1 or 2 roundtrips"""

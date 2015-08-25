@@ -19,6 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
+from __future__ import absolute_import
+
 import os
 
 from samba import Ldb, ldb, read_and_sub_file
@@ -73,7 +76,7 @@ dsServiceName: CN=NTDS Settings,%s
 -
             """ % forced_local_dsa)
 
-    except Exception, estr:
+    except Exception as estr:
         tmpdb.transaction_cancel()
         raise LdifError("Failed to import %s: %s" % (ldif_file, estr))
 
@@ -107,7 +110,8 @@ def samdb_to_ldif_file(samdb, dburl, lp, creds, ldif_file):
         samdb = SamDB(url=dburl,
                       session_info=system_session(),
                       credentials=creds, lp=lp)
-    except ldb.LdbError, (enum, estr):
+    except ldb.LdbError as e:
+        (enum, estr) = e.args
         raise LdifError("Unable to open sam database (%s) : %s" %
                         (dburl, estr))
 
@@ -394,7 +398,8 @@ def samdb_to_ldif_file(samdb, dburl, lp, creds, ldif_file):
         # Write rootdse output
         write_search_result(samdb, f, res)
 
-    except ldb.LdbError, (enum, estr):
+    except ldb.LdbError as e:
+        (enum, estr) = e.args
         raise LdifError("Error processing (%s) : %s" % (sstr, estr))
 
     f.close()

@@ -19,6 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import random
 import uuid
 
@@ -152,7 +155,8 @@ class KCC(object):
                                     self.samdb.get_config_basedn(),
                                     scope=ldb.SCOPE_SUBTREE,
                                     expression="(objectClass=interSiteTransport)")
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             raise KCCError("Unable to find inter-site transports - (%s)" %
                            estr)
 
@@ -185,7 +189,8 @@ class KCC(object):
                                     self.samdb.get_config_basedn(),
                                     scope=ldb.SCOPE_SUBTREE,
                                     expression="(objectClass=siteLink)")
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             raise KCCError("Unable to find inter-site siteLinks - (%s)" % estr)
 
         for msg in res:
@@ -248,7 +253,8 @@ class KCC(object):
                                     self.samdb.get_config_basedn(),
                                     scope=ldb.SCOPE_SUBTREE,
                                     expression="(objectClass=site)")
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             raise KCCError("Unable to find sites - (%s)" % estr)
 
         for msg in res:
@@ -265,7 +271,8 @@ class KCC(object):
         try:
             res = self.samdb.search(base=dn, scope=ldb.SCOPE_BASE,
                                     attrs=["objectGUID"])
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             logger.warning("Search for %s failed: %s.  This typically happens"
                            " in --importldif mode due to lack of module"
                            " support.", dn, estr)
@@ -284,7 +291,8 @@ class KCC(object):
 
                 res = self.samdb.search(base=dn, scope=ldb.SCOPE_BASE,
                                         attrs=["objectGUID"])
-            except ldb.LdbError, (enum, estr):
+            except ldb.LdbError as e:
+                (enum, estr) = e.args
                 raise KCCError("Unable to find my nTDSDSA - (%s)" % estr)
 
         if len(res) != 1:
@@ -324,7 +332,8 @@ class KCC(object):
                                     self.samdb.get_config_basedn(),
                                     scope=ldb.SCOPE_SUBTREE,
                                     expression="(objectClass=crossRef)")
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             raise KCCError("Unable to find partitions - (%s)" % estr)
 
         for msg in res:
@@ -2159,7 +2168,7 @@ class KCC(object):
                                   if not self.get_dsa(x).is_ro())
             rw_dot_edges = [(a, b) for a, b in dot_edges if
                             a in rw_dot_vertices and b in rw_dot_vertices]
-            print rw_dot_edges, rw_dot_vertices
+            print(rw_dot_edges, rw_dot_vertices)
             rw_verify_properties = ('connected',
                                     'directed_double_ring_or_small')
             verify_and_dot('intrasite_rw_pre_ntdscon', rw_dot_edges,
@@ -2255,7 +2264,7 @@ class KCC(object):
                                   if not self.get_dsa(x).is_ro())
             rw_dot_edges = [(a, b) for a, b in dot_edges if
                             a in rw_dot_vertices and b in rw_dot_vertices]
-            print rw_dot_edges, rw_dot_vertices
+            print(rw_dot_edges, rw_dot_vertices)
             rw_verify_properties = ('connected',
                                     'directed_double_ring_or_small')
             verify_and_dot('intrasite_rw_post_ntdscon', rw_dot_edges,
@@ -2453,7 +2462,8 @@ class KCC(object):
         if self.samdb is None:
             try:
                 self.load_samdb(dburl, lp, creds)
-            except ldb.LdbError, (num, msg):
+            except ldb.LdbError as e:
+                (num, msg) = e.args
                 logger.error("Unable to open sam database %s : %s" %
                              (dburl, msg))
                 return 1
@@ -2636,7 +2646,7 @@ class KCC(object):
         try:
             self.samdb = ldif_import_export.ldif_to_samdb(dburl, lp, ldif_file,
                                                           forced_local_dsa)
-        except ldif_import_export.LdifError, e:
+        except ldif_import_export.LdifError as e:
             logger.critical(e)
             return 1
         return 0
@@ -2661,7 +2671,7 @@ class KCC(object):
         try:
             ldif_import_export.samdb_to_ldif_file(self.samdb, dburl, lp, creds,
                                                   ldif_file)
-        except ldif_import_export.LdifError, e:
+        except ldif_import_export.LdifError as e:
             logger.critical(e)
             return 1
         return 0

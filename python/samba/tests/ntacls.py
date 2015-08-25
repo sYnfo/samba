@@ -17,6 +17,7 @@
 #
 
 """Tests for samba.ntacls."""
+from __future__ import absolute_import
 
 from samba.ntacls import setntacl, getntacl, XattrBackendError
 from samba.param import LoadParm

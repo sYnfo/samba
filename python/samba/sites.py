@@ -16,6 +16,7 @@
 #
 
 """Manipulating sites."""
+from __future__ import absolute_import
 
 import ldb
 from ldb import FLAG_MOD_ADD

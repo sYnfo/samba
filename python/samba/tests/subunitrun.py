@@ -31,6 +31,9 @@
 # make sure the script dies immediately when hitting control-C,
 # rather than raising KeyboardInterrupt. As we do all database
 # operations using transactions, this is safe.
+
+from __future__ import absolute_import
+
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 

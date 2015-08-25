@@ -16,9 +16,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import
+from __future__ import print_function
 
 import ldb
-import dsdb
+from . import dsdb
 
 
 def confirm(msg, forced=False, allow_all=False):
@@ -28,7 +30,7 @@ def confirm(msg, forced=False, allow_all=False):
     :param forced: Are the answer forced
     """
     if forced:
-        print("%s [YES]" % msg)
+        print(("%s [YES]" % msg))
         return True
 
     mapping = {
@@ -51,7 +53,7 @@ def confirm(msg, forced=False, allow_all=False):
         v = v.upper()
         if v in mapping:
             return mapping[v]
-        print("Unknown response '%s'" % v)
+        print(("Unknown response '%s'" % v))
 
 
 def normalise_int32(ivalue):

@@ -16,6 +16,7 @@
 #
 
 """Tests for samba.provision."""
+from __future__ import absolute_import
 
 import os
 from samba.provision import (

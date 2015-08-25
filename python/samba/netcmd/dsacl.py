@@ -16,6 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import
+
 import samba.getopt as options
 from samba.dcerpc import security
 from samba.samdb import SamDB

@@ -21,6 +21,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import
+
 import os
 import re
 import sys
@@ -122,7 +124,8 @@ class LDAPBase(object):
         res = None
         try:
             res = self.ldb.search(base=object_dn, scope=SCOPE_BASE)
-        except LdbError, (enum, estr):
+        except LdbError as e:
+            (enum, estr) = e.args
             if enum == ERR_NO_SUCH_OBJECT:
                 return False
             raise
@@ -131,7 +134,7 @@ class LDAPBase(object):
     def delete_force(self, object_dn):
         try:
             self.ldb.delete(object_dn)
-        except Ldb.LdbError, e:
+        except Ldb.LdbError as e:
             assert "No such object" in str(e)
 
     def get_attribute_name(self, key):
@@ -772,7 +775,8 @@ class LDAPBundel(object):
                                      summary=self.summary,
                                      filter_list=self.filter_list,
                                      outf=self.outf, errf=self.errf)
-            except LdbError, (enum, estr):
+            except LdbError as e:
+                (enum, estr) = e.args
                 if enum == ERR_NO_SUCH_OBJECT:
                     self.log( "\n!!! Object not found: %s" % self.dn_list[index] )
                     skip = True
@@ -783,7 +787,8 @@ class LDAPBundel(object):
                         summary=other.summary,
                         filter_list=self.filter_list,
                         outf=self.outf, errf=self.errf)
-            except LdbError, (enum, estr):
+            except LdbError as e:
+                (enum, estr) = e.args
                 if enum == ERR_NO_SUCH_OBJECT:
                     self.log( "\n!!! Object not found: %s" % other.dn_list[index] )
                     skip = True
@@ -836,10 +841,11 @@ class LDAPBundel(object):
         elif self.search_scope == "ONE":
             self.search_scope = SCOPE_ONELEVEL
         else:
-            raise StandardError("Wrong 'scope' given. Choose from: SUB, ONE, BASE")
+            raise Exception("Wrong 'scope' given. Choose from: SUB, ONE, BASE")
         try:
             res = self.con.ldb.search(base=self.search_base, scope=self.search_scope, attrs=["dn"])
-        except LdbError, (enum, estr):
+        except LdbError as e:
+            (enum, estr) = e.args
             self.outf.write("Failed search of base=%s\n" % self.search_base)
             raise
         for x in res:

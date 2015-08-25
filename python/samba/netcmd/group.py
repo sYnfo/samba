@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
+
 import samba.getopt as options
 from samba.netcmd import Command, SuperCommand, CommandError, Option
 import ldb
@@ -124,7 +126,7 @@ Example3 adds a new RFC2307 enabled group for NIS domain samdom and GID 12345 (b
             samdb.newgroup(groupname, groupou=groupou, grouptype = gtype,
                           description=description, mailaddress=mail_address, notes=notes,
                           gidnumber=gid_number, nisdomain=nis_domain)
-        except Exception, e:
+        except Exception as e:
             # FIXME: catch more specific exception
             raise CommandError('Failed to create group "%s"' % groupname, e)
         self.outf.write("Added group %s\n" % groupname)
@@ -174,7 +176,7 @@ Example2 deletes group Group2 from the local server.  The command is run under r
             samdb = SamDB(url=H, session_info=system_session(),
                           credentials=creds, lp=lp)
             samdb.deletegroup(groupname)
-        except Exception, e:
+        except Exception as e:
             # FIXME: catch more specific exception
             raise CommandError('Failed to remove group "%s"' % groupname, e)
         self.outf.write("Deleted group %s\n" % groupname)
@@ -225,7 +227,7 @@ Example2 shows how to add a single user account, User2, to the supergroup AD gro
             groupmembers = listofmembers.split(',')
             samdb.add_remove_group_members(groupname, groupmembers,
                     add_members_operation=True)
-        except Exception, e:
+        except Exception as e:
             # FIXME: catch more specific exception
             raise CommandError('Failed to add members "%s" to group "%s"' % (
                 listofmembers, groupname), e)
@@ -276,7 +278,7 @@ Example2 shows how to remove a single user account, User2, from the supergroup A
                           credentials=creds, lp=lp)
             samdb.add_remove_group_members(groupname, listofmembers.split(","),
                     add_members_operation=False)
-        except Exception, e:
+        except Exception as e:
             # FIXME: Catch more specific exception
             raise CommandError('Failed to remove members "%s" from group "%s"' % (listofmembers, groupname), e)
         self.outf.write("Removed members from group %s\n" % groupname)
@@ -404,7 +406,7 @@ samba-tool group listmembers \"Domain Users\" -H ldap://samba.samdom.example.com
                     member_name = msg.get("cn", idx=0)
                 self.outf.write("%s\n" % member_name)
 
-        except Exception, e:
+        except Exception as e:
             raise CommandError('Failed to list members of "%s" group ' % groupname, e)
 
 

@@ -17,6 +17,7 @@
 #
 
 """Support code for upgrading from Samba 3 to Samba 4."""
+from __future__ import absolute_import
 
 __docformat__ = "restructuredText"
 
@@ -91,7 +92,7 @@ def import_sam_policy(samdb, policy, logger):
 
     try:
         samdb.modify(m)
-    except ldb.LdbError, e:
+    except ldb.LdbError as e:
         logger.warn("Could not set account policy, (%s)", str(e))
 
 
@@ -124,7 +125,7 @@ def add_posix_attrs(logger, samdb, sid, name, nisdomain, xid_type, home=None,
             str(nisdomain), ldb.FLAG_MOD_REPLACE, 'msSFU30NisDomain')
 
         samdb.modify(m)
-    except ldb.LdbError, e:
+    except ldb.LdbError as e:
         logger.warn(
             'Could not add posix attrs for AD entry for sid=%s, (%s)',
             str(sid), str(e))
@@ -154,7 +155,7 @@ def add_ad_posix_idmap_entry(samdb, sid, xid, xid_type, logger):
                 "posixGroup", ldb.FLAG_MOD_ADD, 'objectClass')
 
         samdb.modify(m)
-    except ldb.LdbError, e:
+    except ldb.LdbError as e:
         logger.warn(
             'Could not modify AD idmap entry for sid=%s, id=%s, type=%s (%s)',
             str(sid), str(xid), xid_type, str(e))
@@ -185,7 +186,7 @@ def add_idmap_entry(idmapdb, sid, xid, xid_type, logger):
             m['type'] = ldb.MessageElement(
                 xid_type, ldb.FLAG_MOD_REPLACE, 'type')
             idmapdb.modify(m)
-        except ldb.LdbError, e:
+        except ldb.LdbError as e:
             logger.warn(
                 'Could not modify idmap entry for sid=%s, id=%s, type=%s (%s)',
                 str(sid), str(xid), xid_type, str(e))
@@ -197,7 +198,7 @@ def add_idmap_entry(idmapdb, sid, xid, xid_type, logger):
                         "objectSid": ndr_pack(sid),
                         "type": xid_type,
                         "xidNumber": str(xid)})
-        except ldb.LdbError, e:
+        except ldb.LdbError as e:
             logger.warn(
                 'Could not add idmap entry for sid=%s, id=%s, type=%s (%s)',
                 str(sid), str(xid), xid_type, str(e))
@@ -213,7 +214,7 @@ def import_idmap(idmapdb, samba3, logger):
 
     try:
         samba3_idmap = samba3.get_idmap_db()
-    except IOError, e:
+    except IOError as e:
         logger.warn('Cannot open idmap database, Ignoring: %s', str(e))
         return
 
@@ -255,7 +256,8 @@ def add_group_from_mapping_entry(samdb, groupmap, logger):
         msg = samdb.search(
             base='<SID=%s>' % str(groupmap.sid), scope=ldb.SCOPE_BASE)
         found = True
-    except ldb.LdbError, (ecode, emsg):
+    except ldb.LdbError as e:
+        (ecode, emsg) = e.args
         if ecode == ldb.ERR_NO_SUCH_OBJECT:
             found = False
         else:
@@ -291,7 +293,7 @@ def add_group_from_mapping_entry(samdb, groupmap, logger):
 
         try:
             samdb.add(m, controls=["relax:0"])
-        except ldb.LdbError, e:
+        except ldb.LdbError as e:
             logger.warn('Could not add group name=%s (%s)', groupmap.nt_name, str(e))
 
 
@@ -310,7 +312,8 @@ def add_users_to_group(samdb, group, members, logger):
 
         try:
             samdb.modify(m)
-        except ldb.LdbError, (ecode, emsg):
+        except ldb.LdbError as e:
+            (ecode, emsg) = e.args
             if ecode == ldb.ERR_ENTRY_ALREADY_EXISTS:
                 logger.debug("skipped re-adding member '%s' to group '%s': %s", member_sid, group.sid, emsg)
             elif ecode == ldb.ERR_NO_SUCH_OBJECT:
@@ -406,7 +409,7 @@ def get_posix_attr_from_ldap_backend(logger, ldb_object, base_dn, user, attr):
         msg = ldb_object.search(base_dn, scope=ldb.SCOPE_SUBTREE,
                         expression=("(&(objectClass=posixAccount)(uid=%s))"
                         % (user)), attrs=[attr])
-    except ldb.LdbError, e:
+    except ldb.LdbError as e:
         raise ProvisioningError("Failed to retrieve attribute %s for user %s, the error is: %s" % (attr, user, e))
     else:
         if msg.count <= 1:
@@ -438,7 +441,7 @@ def upgrade_from_samba3(samba3, logger, targetdir, session_info=None,
     # secrets db
     try:
         secrets_db = samba3.get_secrets_db()
-    except IOError, e:
+    except IOError as e:
         raise ProvisioningError("Could not open '%s', the Samba3 secrets database: %s.  Perhaps you specified the incorrect smb.conf, --testparm or --dbdir option?" % (samba3.privatedir_path("secrets.tdb"), str(e)))
 
     if not domainname:
@@ -516,7 +519,7 @@ def upgrade_from_samba3(samba3, logger, targetdir, session_info=None,
             try:
                 members = s3db.enum_aliasmem(group.sid)
                 groupmembers[str(group.sid)] = members
-            except passdb.error, e:
+            except passdb.error as e:
                 logger.warn("Ignoring group '%s' %s listed but then not found: %s",
                             group.nt_name, group.sid, e)
                 continue
@@ -524,7 +527,7 @@ def upgrade_from_samba3(samba3, logger, targetdir, session_info=None,
             try:
                 members = s3db.enum_group_members(group.sid)
                 groupmembers[str(group.sid)] = members
-            except passdb.error, e:
+            except passdb.error as e:
                 logger.warn("Ignoring group '%s' %s listed but then not found: %s",
                             group.nt_name, group.sid, e)
                 continue
@@ -538,7 +541,7 @@ def upgrade_from_samba3(samba3, logger, targetdir, session_info=None,
             try:
                 members = s3db.enum_aliasmem(group.sid)
                 groupmembers[str(group.sid)] = members
-            except passdb.error, e:
+            except passdb.error as e:
                 logger.warn("Ignoring group '%s' %s listed but then not found: %s",
                             group.nt_name, group.sid, e)
                 continue
@@ -622,7 +625,7 @@ Please fix this account before attempting to upgrade again
                         groupmembers[str(group)].append(user.user_sid)
                 else:
                     groupmembers[str(group)] = [user.user_sid];
-        except passdb.error, e:
+        except passdb.error as e:
             logger.warn("Ignoring group memberships of '%s' %s: %s",
                         username, user.user_sid, e)
 
@@ -665,7 +668,7 @@ Please fix this account before attempting to upgrade again
         for url in urls.split():
             try:
                 ldb_object = Ldb(url, credentials=creds)
-            except ldb.LdbError, e:
+            except ldb.LdbError as e:
                 raise ProvisioningError("Could not open ldb connection to %s, the error message is: %s" % (url, e))
             else:
                 break
@@ -708,7 +711,7 @@ Please fix this account before attempting to upgrade again
     samba3_winsdb = None
     try:
         samba3_winsdb = samba3.get_wins_db()
-    except IOError, e:
+    except IOError as e:
         logger.warn('Cannot open wins database, Ignoring: %s', str(e))
 
     if not (serverrole == "ROLE_DOMAIN_BDC" or serverrole == "ROLE_DOMAIN_PDC"):

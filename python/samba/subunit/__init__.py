@@ -16,6 +16,7 @@
 #
 
 """Subunit test protocol."""
+from __future__ import absolute_import
 
 import samba
 

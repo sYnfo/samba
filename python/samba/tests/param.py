@@ -16,6 +16,7 @@
 #
 
 """Tests for samba.param."""
+from __future__ import absolute_import
 
 from samba import param
 import samba.tests

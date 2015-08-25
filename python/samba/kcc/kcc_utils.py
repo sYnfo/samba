@@ -20,6 +20,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
+
 import ldb
 import uuid
 
@@ -83,7 +85,8 @@ class NamingContext(object):
             res = samdb.search(base=self.nc_dnstr,
                                scope=ldb.SCOPE_BASE, attrs=attrs)
 
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             raise Exception("Unable to find naming context (%s) - (%s)" %
                             (self.nc_dnstr, estr))
         msg = res[0]
@@ -313,7 +316,8 @@ class NCReplica(NamingContext):
             res = samdb.search(base=self.nc_dnstr, scope=ldb.SCOPE_BASE,
                                attrs=["repsFrom"])
 
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             raise Exception("Unable to find NC for (%s) - (%s)" %
                             (self.nc_dnstr, estr))
 
@@ -385,7 +389,7 @@ class NCReplica(NamingContext):
         try:
             samdb.modify(m)
 
-        except ldb.LdbError, estr:
+        except ldb.LdbError as estr:
             raise Exception("Could not set repsFrom for (%s) - (%s)" %
                             (self.nc_dnstr, estr))
 
@@ -401,7 +405,8 @@ class NCReplica(NamingContext):
             res = samdb.search(base=self.nc_dnstr, scope=ldb.SCOPE_BASE,
                                attrs=["replUpToDateVector"])
 
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             raise Exception("Unable to find NC for (%s) - (%s)" %
                             (self.nc_dnstr, estr))
 
@@ -435,7 +440,8 @@ class NCReplica(NamingContext):
             res = samdb.search(base=self.nc_dnstr, scope=ldb.SCOPE_BASE,
                                attrs=["fSMORoleOwner"])
 
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             raise Exception("Unable to find NC for (%s) - (%s)" %
                             (self.nc_dnstr, estr))
 
@@ -567,7 +573,8 @@ class DirectoryServiceAgent(object):
             res = samdb.search(base=self.dsa_dnstr, scope=ldb.SCOPE_BASE,
                                attrs=attrs)
 
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             raise Exception("Unable to find nTDSDSA for (%s) - (%s)" %
                             (self.dsa_dnstr, estr))
 
@@ -628,7 +635,8 @@ class DirectoryServiceAgent(object):
             res = samdb.search(base=self.dsa_dnstr, scope=ldb.SCOPE_BASE,
                                attrs=ncattrs)
 
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             raise Exception("Unable to find nTDSDSA NCs for (%s) - (%s)" %
                             (self.dsa_dnstr, estr))
 
@@ -696,7 +704,8 @@ class DirectoryServiceAgent(object):
                                scope=ldb.SCOPE_SUBTREE,
                                expression="(objectClass=nTDSConnection)")
 
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             raise Exception("Unable to find nTDSConnection for (%s) - (%s)" %
                             (self.dsa_dnstr, estr))
 
@@ -873,7 +882,8 @@ class NTDSConnection(object):
             res = samdb.search(base=self.dnstr, scope=ldb.SCOPE_BASE,
                                attrs=attrs)
 
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             raise Exception("Unable to find nTDSConnection for (%s) - (%s)" %
                             (self.dnstr, estr))
 
@@ -920,7 +930,8 @@ class NTDSConnection(object):
             res = samdb.search(base=tdnstr,
                                scope=ldb.SCOPE_BASE, attrs=attrs)
 
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             raise Exception("Unable to find transport (%s) - (%s)" %
                             (tdnstr, estr))
 
@@ -947,7 +958,8 @@ class NTDSConnection(object):
 
         try:
             samdb.delete(self.dnstr)
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             raise Exception("Could not delete nTDSConnection for (%s) - (%s)" %
                             (self.dnstr, estr))
 
@@ -971,7 +983,8 @@ class NTDSConnection(object):
             if len(msg) != 0:
                 found = True
 
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             if enum != ldb.ERR_NO_SUCH_OBJECT:
                 raise Exception("Unable to search for (%s) - (%s)" %
                                 (self.dnstr, estr))
@@ -1016,7 +1029,8 @@ class NTDSConnection(object):
                                    ldb.FLAG_MOD_ADD, "schedule")
         try:
             samdb.add(m)
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             raise Exception("Could not add nTDSConnection for (%s) - (%s)" %
                             (self.dnstr, estr))
 
@@ -1039,7 +1053,8 @@ class NTDSConnection(object):
             # of self.dnstr in the database.
             samdb.search(base=self.dnstr, scope=ldb.SCOPE_BASE)
 
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             if enum == ldb.ERR_NO_SUCH_OBJECT:
                 raise KCCError("nTDSConnection for (%s) doesn't exist!" %
                                self.dnstr)
@@ -1085,7 +1100,8 @@ class NTDSConnection(object):
                 ldb.MessageElement([], ldb.FLAG_MOD_DELETE, "schedule")
         try:
             samdb.modify(m)
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             raise Exception("Could not modify nTDSConnection for (%s) - (%s)" %
                             (self.dnstr, estr))
 
@@ -1243,7 +1259,8 @@ class Partition(NamingContext):
             res = samdb.search(base=self.partstr, scope=ldb.SCOPE_BASE,
                                attrs=attrs)
 
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             raise Exception("Unable to find partition for (%s) - (%s)" % (
                             self.partstr, estr))
 
@@ -1384,7 +1401,8 @@ class Site(object):
                                attrs=attrs)
             self_res = samdb.search(base=self.site_dnstr, scope=ldb.SCOPE_BASE,
                                     attrs=['objectGUID'])
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             raise Exception("Unable to find site settings for (%s) - (%s)" %
                             (ssdn, estr))
 
@@ -1415,7 +1433,8 @@ class Site(object):
             res = samdb.search(self.site_dnstr,
                                scope=ldb.SCOPE_SUBTREE,
                                expression="(objectClass=nTDSDSA)")
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             raise Exception("Unable to find nTDSDSAs - (%s)" % estr)
 
         for msg in res:
@@ -1610,7 +1629,7 @@ class Site(object):
         try:
             samdb.modify(m)
 
-        except ldb.LdbError, estr:
+        except ldb.LdbError as estr:
             raise Exception(
                 "Could not set interSiteTopologyGenerator for (%s) - (%s)" %
                 (ssdn, estr))
@@ -1807,7 +1826,8 @@ class Transport(object):
             res = samdb.search(base=self.dnstr, scope=ldb.SCOPE_BASE,
                                attrs=attrs)
 
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             raise Exception("Unable to find Transport for (%s) - (%s)" %
                             (self.dnstr, estr))
 
@@ -2067,7 +2087,8 @@ class SiteLink(object):
             res = samdb.search(base=self.dnstr, scope=ldb.SCOPE_BASE,
                                attrs=attrs, controls=['extended_dn:0'])
 
-        except ldb.LdbError, (enum, estr):
+        except ldb.LdbError as e:
+            (enum, estr) = e.args
             raise Exception("Unable to find SiteLink for (%s) - (%s)" %
                             (self.dnstr, estr))
 

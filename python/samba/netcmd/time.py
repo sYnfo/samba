@@ -16,8 +16,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import
+
 import samba.getopt as options
-import common
+from . import common
 from samba.net import Net
 
 from samba.netcmd import (

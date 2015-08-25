@@ -6,6 +6,9 @@
 #  Released under the GNU GPL v3 or later
 #
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import sys
 
 # Find right directory when running from source tree
@@ -29,7 +32,7 @@ if len(args) < 1:
 
 binding = args[0]
 
-print "Connecting to " + binding
+print("Connecting to " + binding)
 conn = winreg.winreg(binding, sambaopts.get_loadparm())
 
 def list_values(key):
@@ -38,9 +41,9 @@ def list_values(key):
         name = winreg.StringBuf()
         name.size = max_valnamelen
         (name, type, data, _, data_len) = conn.EnumValue(key, i, name, 0, "", max_valbufsize, 0)
-        print "\ttype=%-30s size=%4d  '%s'" % type, len, name
+        print("\ttype=%-30s size=%4d  '%s'" % type, len, name)
         if type in (winreg.REG_SZ, winreg.REG_EXPAND_SZ):
-            print "\t\t'%s'" % data
+            print("\t\t'%s'" % data)
 #        if (v.type == reg.REG_MULTI_SZ) {
 #            for (j in v.value) {
 #                printf("\t\t'%s'\n", v.value[j])
@@ -75,13 +78,13 @@ else:
 if opts.createkey:
     reg.create_key("HKLM\\SOFTWARE", opt.createkey)
 else:
-    print "Listing registry tree '%s'" % root
+    print("Listing registry tree '%s'" % root)
     try:
         root_key = getattr(conn, "Open%s" % root)(None, winreg.KEY_QUERY_VALUE | winreg.KEY_ENUMERATE_SUB_KEYS)
     except AttributeError:
-        print "Unknown root key name %s" % root
+        print("Unknown root key name %s" % root)
         sys.exit(1)
     count = list_path(root_key, root)
     if count == 0:
-        print "No entries found"
+        print("No entries found")
         sys.exit(1)

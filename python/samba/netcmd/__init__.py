@@ -16,6 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import absolute_import
+
 import optparse, samba
 from samba import getopt as options
 from ldb import LdbError
@@ -173,7 +175,7 @@ class Command(object):
 
         try:
             return self.run(*args, **kwargs)
-        except Exception, e:
+        except Exception as e:
             self.show_command_error(e)
             return -1
 
