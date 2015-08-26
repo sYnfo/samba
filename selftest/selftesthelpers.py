@@ -18,6 +18,9 @@
 # three separated by newlines. All other lines in the output are considered
 # comments.
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 import subprocess
 import sys
@@ -65,14 +68,14 @@ def plantestsuite(name, env, cmdline):
     :param env: Environment to run the testsuite in
     :param cmdline: Command line to run
     """
-    print "-- TEST --"
-    print name
-    print env
+    print("-- TEST --")
+    print(name)
+    print(env)
     if isinstance(cmdline, list):
         cmdline = " ".join(cmdline)
     if "$LISTOPT" in cmdline:
         raise AssertionError("test %s supports --list, but not --load-list" % name)
-    print cmdline + " 2>&1 " + " | " + add_prefix(name, env)
+    print(cmdline + " 2>&1 " + " | " + add_prefix(name, env))
 
 
 def add_prefix(prefix, env, support_list=False):
@@ -84,13 +87,13 @@ def add_prefix(prefix, env, support_list=False):
 
 
 def plantestsuite_loadlist(name, env, cmdline):
-    print "-- TEST-LOADLIST --"
+    print("-- TEST-LOADLIST --")
     if env == "none":
         fullname = name
     else:
         fullname = "%s(%s)" % (name, env)
-    print fullname
-    print env
+    print(fullname)
+    print(env)
     if isinstance(cmdline, list):
         cmdline = " ".join(cmdline)
     support_list = ("$LISTOPT" in cmdline)
@@ -98,8 +101,8 @@ def plantestsuite_loadlist(name, env, cmdline):
         raise AssertionError("loadlist test %s does not support not --list" % name)
     if not "$LOADLIST" in cmdline:
         raise AssertionError("loadlist test %s does not support --load-list" % name)
-    print ("%s | %s" % (cmdline.replace("$LOADLIST", ""), add_prefix(name, env, support_list))).replace("$LISTOPT", "--list")
-    print cmdline.replace("$LISTOPT", "") + " 2>&1 " + " | " + add_prefix(name, env, False)
+    print(("%s | %s" % (cmdline.replace("$LOADLIST", ""), add_prefix(name, env, support_list))).replace("$LISTOPT", "--list"))
+    print(cmdline.replace("$LISTOPT", "") + " 2>&1 " + " | " + add_prefix(name, env, False))
 
 
 def skiptestsuite(name, reason):
@@ -109,7 +112,7 @@ def skiptestsuite(name, reason):
     :param reason: Reason the test suite was skipped
     """
     # FIXME: Report this using subunit, but re-adjust the testsuite count somehow
-    print >>sys.stderr, "skipping %s (%s)" % (name, reason)
+    print("skipping %s (%s)" % (name, reason), file=sys.stderr)
 
 
 def planperltestsuite(name, path):

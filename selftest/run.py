@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """Test command running."""
+from __future__ import absolute_import
 
 import datetime
 import os
@@ -109,7 +110,7 @@ def run_testsuite_command(name, cmd, subunit_ops, env=None, outf=None):
     subunit_ops.time(now())
     try:
         exitcode = subprocess.call(cmd, shell=True, stdout=outf)
-    except Exception, e:
+    except Exception as e:
         subunit_ops.time(now())
         subunit_ops.progress(None, subunit.PROGRESS_POP)
         subunit_ops.end_testsuite(name, "error", "Unable to run %r: %s" % (cmd, e))

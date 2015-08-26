@@ -18,6 +18,7 @@
 # MA  02110-1301, USA.
 
 """Tests for selftest/socket_wrapper."""
+from __future__ import absolute_import
 
 from samba.tests import TestCase
 

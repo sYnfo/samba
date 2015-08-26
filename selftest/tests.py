@@ -18,7 +18,9 @@
 # three separated by newlines. All other lines in the output are considered
 # comments.
 
-from selftesthelpers import *
+from __future__ import absolute_import
+
+from .selftesthelpers import *
 
 try:
     config_h = os.environ["CONFIG_H"]

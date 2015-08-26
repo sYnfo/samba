@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
+
 import atexit
 from cStringIO import StringIO
 import os
@@ -30,20 +32,20 @@ import optparse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from selftest import (
+from .selftest import (
     socket_wrapper,
     subunithelper,
     testlist,
     )
-from selftest.client import write_clientconf
-from selftest.run import (
+from .selftest.client import write_clientconf
+from .selftest.run import (
     expand_command_list,
     expand_command_run,
     exported_envvars_str,
     now,
     run_testsuite_command,
     )
-from selftest.target import (
+from .selftest.target import (
     EnvironmentManager,
     NoneTarget,
     UnsupportedEnvironment,
@@ -179,14 +181,14 @@ prefix = os.path.normpath(opts.prefix)
 # will have wider permissions (ie 0777) and this would allow other users on the
 # host to subvert the test process.
 if not os.path.isdir(prefix):
-    os.mkdir(prefix, 0700)
+    os.mkdir(prefix, 0o700)
 else:
-    os.chmod(prefix, 0700)
+    os.chmod(prefix, 0o700)
 
 prefix_abs = os.path.abspath(prefix)
 tmpdir_abs = os.path.abspath(os.path.join(prefix_abs, "tmp"))
 if not os.path.isdir(tmpdir_abs):
-    os.mkdir(tmpdir_abs, 0777)
+    os.mkdir(tmpdir_abs, 0o777)
 
 srcdir_abs = os.path.abspath(opts.srcdir)
 
@@ -258,14 +260,14 @@ if not opts.list:
             sys.stderr.write("You must include --enable-socket-wrapper when compiling Samba in order to execute 'make test'.  Exiting....\n")
             sys.exit(1)
         testenv_default = "ad_dc_ntvfs"
-        from selftest.target.samba import Samba
+        from .selftest.target.samba import Samba
         target = Samba(opts.bindir, ldap, opts.srcdir, server_maxtime)
     elif opts.target == "samba3":
         if opts.socket_wrapper and not has_socket_wrapper(opts.bindir):
             sys.stderr.write("You must include --enable-socket-wrapper when compiling Samba in order to execute 'make test'.  Exiting....\n")
             sys.exit(1)
         testenv_default = "member"
-        from selftest.target.samba3 import Samba3
+        from .selftest.target.samba3 import Samba3
         target = Samba3(opts.bindir, srcdir_abs, server_maxtime)
     elif opts.target == "none":
         testenv_default = "none"
@@ -491,7 +493,7 @@ else:
             subunit_ops.end_testsuite(name, "skip",
                 "environment %s is unknown in this test backend - skipping" % envname)
             continue
-        except Exception, e:
+        except Exception as e:
             subunit_ops.start_testsuite(name)
             traceback.print_exc()
             subunit_ops.end_testsuite(name, "error",

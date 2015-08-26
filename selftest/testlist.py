@@ -18,6 +18,7 @@
 # MA  02110-1301, USA.
 
 """Selftest test list management."""
+from __future__ import absolute_import
 
 __all__ = ['find_in_list', 'read_test_regexes', 'read_testlist']
 

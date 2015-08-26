@@ -18,6 +18,7 @@
 # MA  02110-1301, USA.
 
 """Tests for selftest.target."""
+from __future__ import absolute_import
 
 from selftest.target import (
     Environment,

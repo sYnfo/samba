@@ -18,6 +18,7 @@
 # MA  02110-1301, USA.
 
 """Tests for selftest.testlist."""
+from __future__ import absolute_import
 
 import os
 import tempfile

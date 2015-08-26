@@ -15,28 +15,30 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
+
 import os
 import shutil
 
 def write_clientconf(conffile, clientdir, vars):
     if not os.path.isdir(clientdir):
-        os.mkdir(clientdir, 0777)
+        os.mkdir(clientdir, 0o777)
 
     for n in ["private", "lockdir", "statedir", "cachedir"]:
         p = os.path.join(clientdir, n)
         if os.path.isdir(p):
             shutil.rmtree(p)
-        os.mkdir(p, 0777)
+        os.mkdir(p, 0o777)
 
     # this is ugly, but the ncalrpcdir needs exactly 0755
     # otherwise tests fail.
-    mask = os.umask(0022)
+    mask = os.umask(0o022)
 
     for n in ["ncalrpcdir", "ncalrpcdir/np"]:
         p = os.path.join(clientdir, n)
         if os.path.isdir(p):
             shutil.rmtree(p)
-        os.mkdir(p, 0777)
+        os.mkdir(p, 0o777)
     os.umask(mask)
 
     settings = {

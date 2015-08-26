@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
+
 __all__ = ['setup_dir', 'setup_pcap', 'set_default_iface']
 
 import os
@@ -33,14 +35,14 @@ def setup_dir(dir, pcap):
     if dir is not None:
         if os.path.isdir(dir):
             shutil.rmtree(dir)
-        os.mkdir(dir, 0777)
+        os.mkdir(dir, 0o777)
 
         if pcap:
             pcap_dir = os.path.join(dir, "pcap")
 
             if os.path.isdir(pcap_dir):
                 shutil.rmtree(pcap_dir)
-            os.mkdir(pcap_dir, 0777)
+            os.mkdir(pcap_dir, 0o777)
 
     if pcap_dir is not None:
         os.environ["SOCKET_WRAPPER_PCAP_DIR"] = pcap_dir

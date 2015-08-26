@@ -3,6 +3,8 @@
 # Copyright (C) 2005-2012 Jelmer Vernooij <jelmer@samba.org>
 # Published under the GNU GPL, v3 or later.
 
+from __future__ import absolute_import
+
 import os
 import sys
 
