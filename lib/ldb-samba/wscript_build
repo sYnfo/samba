@@ -21,9 +21,10 @@ bld.SAMBA_SUBSYSTEM('ldbwrap',
 
 for env in bld.gen_python_environments(['PKGCONFIGDIR']):
     pyldb_util = bld.pyembed_libname('pyldb-util')
+    pyparam_util = bld.pyembed_libname('pyparam_util')
 
     bld.SAMBA_PYTHON('python_samba__ldb', 'pyldb.c',
-                     deps='ldbsamba pyparam_util ldbwrap ' + pyldb_util,
+                     deps='ldbsamba ldbwrap %s %s' % (pyldb_util, pyparam_util),
                      realname='samba/_ldb.so')
 
 bld.SAMBA_MODULE('ldbsamba_extensions',

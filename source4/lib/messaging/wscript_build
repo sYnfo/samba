@@ -8,9 +8,11 @@ bld.SAMBA_LIBRARY('MESSAGING',
 	)
 
 for env in bld.gen_python_environments():
+	pyparam_util = bld.pyembed_libname('pyparam_util')
+
 	bld.SAMBA_PYTHON('python_messaging',
 		source='pymessaging.c',
-		deps='MESSAGING events pyparam_util',
+		deps='MESSAGING events ' + pyparam_util,
 		realname='samba/messaging.so'
 		)
 

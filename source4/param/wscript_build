@@ -31,17 +31,18 @@ bld.SAMBA_SUBSYSTEM('SECRETS',
 
 
 for env in bld.gen_python_environments():
-	bld.SAMBA_PYTHON('pyparam',
-		source='pyparam.c',
-		deps='samba-hostconfig pytalloc-util',
-		realname='samba/param.so'
-		)
-
 	pyparam_util = bld.pyembed_libname('pyparam_util')
 	pytalloc_util = bld.pyembed_libname('pytalloc-util')
 	pyldb_util = bld.pyembed_libname('pyldb-util')
 	LIBPYTHON = bld.pyembed_libname('LIBPYTHON')
 	PROVISION = bld.pyembed_libname('PROVISION')
+
+	bld.SAMBA_PYTHON('pyparam',
+		source='pyparam.c',
+		deps='samba-hostconfig ' + pytalloc_util,
+		realname='samba/param.so'
+		)
+
 	bld.SAMBA_SUBSYSTEM(pyparam_util,
 		source='pyparam_util.c',
 		deps='samba-hostconfig ' + LIBPYTHON,

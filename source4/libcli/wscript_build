@@ -32,9 +32,10 @@ bld.SAMBA_SUBSYSTEM('LIBCLI_SMB_COMPOSITE',
 	)
 
 for env in bld.gen_python_environments():
+	pyparam_util = bld.pyembed_libname('pyparam_util')
 	bld.SAMBA_PYTHON('pysmb',
 	    source='pysmb.c',
-	    deps='LIBCLI_SMB_COMPOSITE LIBCLI_SMB2 tevent-util pyparam_util',
+	    deps='LIBCLI_SMB_COMPOSITE LIBCLI_SMB2 tevent-util ' + pyparam_util,
 		public_deps='cli_composite samba-credentials gensec LIBCLI_RESOLVE tevent param_options',
 	    realname='samba/smb.so'
 	    )

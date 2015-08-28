@@ -8,8 +8,10 @@ bld.SAMBA_LIBRARY('samba-security',
                   )
 
 for env in bld.gen_python_environments():
+    pytalloc_util = bld.pyembed_libname('pytalloc-util')
+
     bld.SAMBA_PYTHON('pysecurity',
                      source='pysecurity.c',
-                     deps='samba-security pytalloc-util',
+                     deps='samba-security ' + pytalloc_util,
                      realname='samba/security.so'
                      )

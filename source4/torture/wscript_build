@@ -170,6 +170,7 @@ bld.SAMBA_MODULE('torture_rpc',
 
 bld.RECURSE('drs')
 bld.RECURSE('dns')
+PROVISION = bld.pyembed_libname('PROVISION')
 
 bld.SAMBA_MODULE('TORTURE_RAP',
 	source='rap/rap.c rap/rpc.c rap/printing.c rap/sam.c',
@@ -246,7 +247,7 @@ bld.SAMBA_MODULE('TORTURE_NET',
 	autoproto='libnet/proto.h',
 	subsystem='smbtorture',
 	init_function='torture_net_init',
-	deps='samba-net popt POPT_CREDENTIALS torture_rpc PROVISION',
+	deps='samba-net popt POPT_CREDENTIALS torture_rpc ' + PROVISION,
 	internal_module=True
 	)
 
