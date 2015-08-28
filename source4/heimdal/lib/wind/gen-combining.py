@@ -42,7 +42,7 @@ import generate
 import UnicodeData
 
 if len(sys.argv) != 3:
-    print "usage: %s UnicodeData.txt out-dir" % sys.argv[0]
+    print("usage: %s UnicodeData.txt out-dir" % sys.argv[0])
     sys.exit(1)
 
 ud = UnicodeData.read(sys.argv[1])
@@ -79,9 +79,7 @@ combining_c.file.write(
 const struct translation _wind_combining_table[] = {
 ''')
 
-s = trans.keys()
-s.sort()
-for k in s:
+for k in sorted(trans.keys()):
     v = trans[k]
     combining_c.file.write("{0x%x, %u}, /* %s */\n"
                            % (k, v[0], v[1]))

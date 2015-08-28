@@ -35,7 +35,6 @@
 # SUCH DAMAGE. 
 
 import re
-import string
 
 def _merge_table(res, source):
     for table in source.keys():
@@ -57,7 +56,7 @@ def symbols(tabledict, tables):
         list = list + tabledict.get(x, [])
     if len(list) == 0:
         return ""
-    return "|".join(map(lambda x: "WIND_PROFILE_%s" % (string.upper(x)), list))
+    return "|".join(map(lambda x: "WIND_PROFILE_%s" % (x.upper()), list))
 
 def get_errorlist():
     d = dict()
