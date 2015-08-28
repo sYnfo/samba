@@ -247,7 +247,7 @@ class builder(object):
 
     def start_next(self):
         if self.next == len(self.sequence):
-            print '%s: Completed OK' % self.name
+            print('%s: Completed OK' % self.name)
             self.done = True
             return
         (self.stage, self.cmd, self.output_mime_type) = self.sequence[self.next]
@@ -256,7 +256,7 @@ class builder(object):
         self.cmd = self.cmd.replace("${PREFIX_DIR}", "%s" % self.prefix)
 #        if self.output_mime_type == "text/x-subunit":
 #            self.cmd += " | %s --immediate" % (os.path.join(os.path.dirname(__file__), "selftest/format-subunit"))
-        print '%s: [%s] Running %s' % (self.name, self.stage, self.cmd)
+        print('%s: [%s] Running %s' % (self.name, self.stage, self.cmd))
         cwd = os.getcwd()
         os.chdir("%s/%s" % (self.sdir, self.dir))
         self.proc = Popen(self.cmd, shell=True,
@@ -631,13 +631,13 @@ top_commit_msg = run_cmd("git log -1", dir=gitroot, output=True)
 
 try:
     os.makedirs(testbase)
-except Exception, reason:
+except Exception as reason:
     raise Exception("Unable to create %s : %s" % (testbase, reason))
 cleanup_list.append(testbase)
 
 if options.daemon:
     logfile = os.path.join(testbase, "log")
-    print "Forking into the background, writing progress to %s" % logfile
+    print("Forking into the background, writing progress to %s" % logfile)
     daemonize(logfile)
 
 write_pidfile(gitroot + "/autobuild.pid")
@@ -685,9 +685,9 @@ if options.tail:
 
 elapsed_time = time.time() - start_time
 if status == 0:
-    print errstr
+    print(errstr)
     if options.passcmd is not None:
-        print("Running passcmd: %s" % options.passcmd)
+        print(("Running passcmd: %s" % options.passcmd))
         run_cmd(options.passcmd, dir=test_master)
     if options.pushto is not None:
         push_to(options.pushto, push_branch=options.branch)

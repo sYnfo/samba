@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 # Unix SMB/CIFS implementation.
 # Copyright (C) 2014 Catalyst.Net Ltd
 #
@@ -55,7 +56,7 @@ def iterate_all(path):
 
     try:
         p = open(path, 'r')
-    except IOError, e:
+    except IOError as e:
         raise Exception("Error opening parameters file")
     out = p.read()
 
