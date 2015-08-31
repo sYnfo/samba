@@ -154,7 +154,8 @@ systemOnly: FALSE
         try:
                  self.ldb.add_ldif(ldif)
                  self.fail()
-        except LdbError, (num, _):
+        except LdbError as e:
+                 (num, _) = e.args
                  self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
 
         ldif = """
@@ -354,7 +355,8 @@ systemOnly: FALSE
         try:
             self.ldb.add_ldif(ldif_fail)
             self.fail("Adding attribute with preset msDS-IntId should fail")
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.assertEquals(num, ERR_UNWILLING_TO_PERFORM)
 
         # add the new attribute and update schema
@@ -381,7 +383,8 @@ systemOnly: FALSE
         try:
             self.ldb.modify(msg)
             self.fail("Modifying msDS-IntId should return error")
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
 
         # 2. Create attribute with systemFlags = FLAG_SCHEMA_BASE_OBJECT
@@ -397,7 +400,8 @@ systemOnly: FALSE
         try:
             self.ldb.add_ldif(ldif_fail)
             self.fail("Adding attribute with preset msDS-IntId should fail")
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.assertEquals(num, ERR_UNWILLING_TO_PERFORM)
 
         # add the new attribute and update schema
@@ -424,7 +428,8 @@ systemOnly: FALSE
         try:
             self.ldb.modify(msg)
             self.fail("Modifying msDS-IntId should return error")
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
 
 
@@ -484,7 +489,8 @@ systemOnly: FALSE
         try:
             self.ldb.modify(msg)
             self.fail("Modifying msDS-IntId should return error")
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
 
         # 2. Create Class with systemFlags = FLAG_SCHEMA_BASE_OBJECT
@@ -522,7 +528,8 @@ systemOnly: FALSE
         try:
             self.ldb.modify(msg)
             self.fail("Modifying msDS-IntId should return error")
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
         res = self.ldb.search(class_dn, scope=SCOPE_BASE, attrs=["msDS-IntId"])
         self.assertEquals(len(res), 1)
@@ -548,7 +555,7 @@ systemOnly: FALSE
                     #self.assertTrue("msDS-IntId" in ldb_msg, "msDS-IntId expected on: %s" % ldb_msg.dn)
                     if "msDS-IntId" not in ldb_msg:
                         count = count + 1
-                        print "%3d warning: msDS-IntId expected on: %-30s %s" % (count, ldb_msg["attributeID"], ldb_msg["cn"])
+                        print("%3d warning: msDS-IntId expected on: %-30s %s" % (count, ldb_msg["attributeID"], ldb_msg["cn"]))
             else:
                 self.assertTrue("msDS-IntId" not in ldb_msg)
 
@@ -576,7 +583,8 @@ class SchemaTests_msDS_isRODC(samba.tests.TestCase):
             ntds_search_dn = "CN=NTDS Settings,%s" % ldb_msg['dn']
             try:
                 res_check = self.ldb.search(ntds_search_dn, attrs=["objectCategory"])
-            except LdbError, (num, _):
+            except LdbError as e:
+                (num, _) = e.args
                 self.assertEquals(num, ERR_NO_SUCH_OBJECT)
                 print("Server entry %s doesn't have a NTDS settings object" % res[0]['dn'])
             else:

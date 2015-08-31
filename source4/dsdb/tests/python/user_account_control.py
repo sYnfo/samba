@@ -102,7 +102,7 @@ class UserAccountControlTests(samba.tests.TestCase):
         msg = ldb.Message.from_dict(self.samdb, msg_dict )
         msg["sAMAccountName"] = samaccountname
 
-        print "Adding computer account %s" % computername
+        print("Adding computer account %s" % computername)
         samdb.add(msg)
 
     def get_creds(self, target_username, target_password):
@@ -223,7 +223,8 @@ class UserAccountControlTests(samba.tests.TestCase):
         try:
             self.samdb.modify(m)
             self.fail("Unexpectedly able to set userAccountControl to be a DC on %s" % m.dn)
-        except LdbError, (enum, estr):
+        except LdbError as e:
+            (enum, estr) = e.args
             self.assertEqual(ldb.ERR_INSUFFICIENT_ACCESS_RIGHTS, enum)
 
         m = ldb.Message()
@@ -233,7 +234,8 @@ class UserAccountControlTests(samba.tests.TestCase):
         try:
             self.samdb.modify(m)
             self.fail("Unexpectedly able to set userAccountControl to be an RODC on %s" % m.dn)
-        except LdbError, (enum, estr):
+        except LdbError as e:
+            (enum, estr) = e.args
             self.assertEqual(ldb.ERR_INSUFFICIENT_ACCESS_RIGHTS, enum)
 
         m = ldb.Message()
@@ -248,7 +250,8 @@ class UserAccountControlTests(samba.tests.TestCase):
                                                  ldb.FLAG_MOD_REPLACE, "primaryGroupID")
         try:
             self.samdb.modify(m)
-        except LdbError, (enum, estr):
+        except LdbError as e:
+            (enum, estr) = e.args
             self.assertEqual(ldb.ERR_UNWILLING_TO_PERFORM, enum)
             return
         self.fail()
@@ -283,7 +286,8 @@ class UserAccountControlTests(samba.tests.TestCase):
         try:
             self.samdb.modify(m)
             self.fail("Unexpectedly able to set userAccountControl on %s" % m.dn)
-        except LdbError, (enum, estr):
+        except LdbError as e:
+            (enum, estr) = e.args
             self.assertEqual(ldb.ERR_INSUFFICIENT_ACCESS_RIGHTS, enum)
 
         m = ldb.Message()
@@ -293,7 +297,8 @@ class UserAccountControlTests(samba.tests.TestCase):
         try:
              self.samdb.modify(m)
              self.fail()
-        except LdbError, (enum, estr):
+        except LdbError as e:
+             (enum, estr) = e.args
              self.assertEqual(ldb.ERR_INSUFFICIENT_ACCESS_RIGHTS, enum)
 
         m = ldb.Message()
@@ -326,7 +331,8 @@ class UserAccountControlTests(samba.tests.TestCase):
         try:
             self.admin_samdb.modify(m)
             self.fail("Unexpectedly able to set userAccountControl to UF_WORKSTATION_TRUST_ACCOUNT|UF_PARTIAL_SECRETS_ACCOUNT|UF_TRUSTED_FOR_DELEGATION on %s" % m.dn)
-        except LdbError, (enum, estr):
+        except LdbError as e:
+            (enum, estr) = e.args
             self.assertEqual(ldb.ERR_OTHER, enum)
 
         m = ldb.Message()
@@ -397,7 +403,8 @@ class UserAccountControlTests(samba.tests.TestCase):
                 self.samdb.modify(m)
                 if (bit in priv_bits):
                     self.fail("Unexpectedly able to set userAccountControl bit 0x%08X on %s" % (bit, m.dn))
-            except LdbError, (enum, estr):
+            except LdbError as e:
+                (enum, estr) = e.args
                 if bit in invalid_bits:
                     self.assertEqual(enum, ldb.ERR_OTHER, "was not able to set 0x%08X on %s" % (bit, m.dn))
                     # No point going on, try the next bit
@@ -472,7 +479,8 @@ class UserAccountControlTests(samba.tests.TestCase):
                 if bit in invalid_bits:
                     self.fail("Should have been unable to set userAccountControl bit 0x%08X on %s" % (bit, m.dn))
 
-            except LdbError, (enum, estr):
+            except LdbError as e:
+                (enum, estr) = e.args
                 if bit in invalid_bits:
                     self.assertEqual(enum, ldb.ERR_OTHER)
                     # No point going on, try the next bit
@@ -504,7 +512,8 @@ class UserAccountControlTests(samba.tests.TestCase):
                                                              ldb.FLAG_MOD_REPLACE, "userAccountControl")
                 self.samdb.modify(m)
 
-            except LdbError, (enum, estr):
+            except LdbError as e:
+                (enum, estr) = e.args
                 self.fail("Unable to set userAccountControl bit 0x%08X on %s: %s" % (bit, m.dn, estr))
 
             try:
@@ -516,7 +525,8 @@ class UserAccountControlTests(samba.tests.TestCase):
                 if bit in priv_to_remove_bits:
                     self.fail("Should have been unable to remove userAccountControl bit 0x%08X on %s" % (bit, m.dn))
 
-            except LdbError, (enum, estr):
+            except LdbError as e:
+                (enum, estr) = e.args
                 if bit in priv_to_remove_bits:
                     self.assertEqual(enum, ldb.ERR_INSUFFICIENT_ACCESS_RIGHTS)
                 else:
@@ -569,7 +579,8 @@ class UserAccountControlTests(samba.tests.TestCase):
                 if bit in priv_bits:
                     self.fail("Unexpectdly able to set userAccountControl bit 0x%08X on %s" % (bit, computername))
 
-            except LdbError, (enum, estr):
+            except LdbError as e:
+                (enum, estr) = e.args
                 if bit in invalid_bits:
                     self.assertEqual(enum, ldb.ERR_OTHER, "Invalid bit 0x%08X was able to be set on %s" % (bit, computername))
                     # No point going on, try the next bit
@@ -593,7 +604,8 @@ class UserAccountControlTests(samba.tests.TestCase):
             # When creating a new object, you can not ever set the primaryGroupID
             self.add_computer_ldap(computername, others={"primaryGroupID": [str(security.DOMAIN_RID_ADMINS)]})
             self.fail("Unexpectedly able to set primaryGruopID to be an admin on %s" % computername)
-        except LdbError, (enum, estr):
+        except LdbError as e:
+            (enum, estr) = e.args
             self.assertEqual(enum, ldb.ERR_UNWILLING_TO_PERFORM)
 
 
@@ -627,7 +639,8 @@ class UserAccountControlTests(samba.tests.TestCase):
 
             # When creating a new object, you can not ever set the primaryGroupID
             self.fail("Unexpectedly able to set primaryGroupID to be other than DCS on %s" % computername)
-        except LdbError, (enum, estr):
+        except LdbError as e:
+            (enum, estr) = e.args
             self.assertEqual(enum, ldb.ERR_UNWILLING_TO_PERFORM)
 
     def test_primarygroupID_priv_member_modify(self):
@@ -660,7 +673,8 @@ class UserAccountControlTests(samba.tests.TestCase):
 
             # When creating a new object, you can not ever set the primaryGroupID
             self.fail("Unexpectedly able to set primaryGroupID to be other than DCS on %s" % computername)
-        except LdbError, (enum, estr):
+        except LdbError as e:
+            (enum, estr) = e.args
             self.assertEqual(enum, ldb.ERR_UNWILLING_TO_PERFORM)
 
 

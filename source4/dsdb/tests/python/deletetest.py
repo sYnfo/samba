@@ -52,7 +52,7 @@ class BaseDeleteTests(samba.tests.TestCase):
         self.configuration_dn = self.ldb.get_config_basedn().get_linearized()
 
     def search_guid(self, guid):
-        print "SEARCH by GUID %s" % self.GUID_string(guid)
+        print("SEARCH by GUID %s" % self.GUID_string(guid))
 
         res = self.ldb.search(base="<GUID=%s>" % self.GUID_string(guid),
                          scope=SCOPE_BASE, controls=["show_deleted:1"])
@@ -60,7 +60,7 @@ class BaseDeleteTests(samba.tests.TestCase):
         return res[0]
 
     def search_dn(self,dn):
-        print "SEARCH by DN %s" % dn
+        print("SEARCH by DN %s" % dn)
 
         res = self.ldb.search(expression="(objectClass=*)",
                          base=dn,
@@ -76,14 +76,14 @@ class BasicDeleteTests(BaseDeleteTests):
         super(BasicDeleteTests, self).setUp()
 
     def del_attr_values(self, delObj):
-        print "Checking attributes for %s" % delObj["dn"]
+        print("Checking attributes for %s" % delObj["dn"])
 
         self.assertEquals(delObj["isDeleted"][0],"TRUE")
         self.assertTrue(not("objectCategory" in delObj))
         self.assertTrue(not("sAMAccountType" in delObj))
 
     def preserved_attributes_list(self, liveObj, delObj):
-        print "Checking for preserved attributes list"
+        print("Checking for preserved attributes list")
 
         preserved_list = ["nTSecurityDescriptor", "attributeID", "attributeSyntax", "dNReferenceUpdate", "dNSHostName",
         "flatName", "governsID", "groupType", "instanceType", "lDAPDisplayName", "legacyExchangeDN",
@@ -98,7 +98,7 @@ class BasicDeleteTests(BaseDeleteTests):
                 self.assertTrue(a in delObj)
 
     def check_rdn(self, liveObj, delObj, rdnName):
-        print "Checking for correct rDN"
+        print("Checking for correct rDN")
         rdn=liveObj[rdnName][0]
         rdn2=delObj[rdnName][0]
         name2=delObj[rdnName][0]
@@ -107,18 +107,19 @@ class BasicDeleteTests(BaseDeleteTests):
         self.assertEquals(name2, rdn + "\nDEL:" + self.GUID_string(guid))
 
     def delete_deleted(self, ldb, dn):
-        print "Testing the deletion of the already deleted dn %s" % dn
+        print("Testing the deletion of the already deleted dn %s" % dn)
 
         try:
             ldb.delete(dn)
             self.fail()
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.assertEquals(num, ERR_NO_SUCH_OBJECT)
 
     def test_delete_protection(self):
         """Delete protection tests"""
 
-        print self.base_dn
+        print(self.base_dn)
 
         delete_force(self.ldb, "cn=entry1,cn=ldaptestcontainer," + self.base_dn)
         delete_force(self.ldb, "cn=entry2,cn=ldaptestcontainer," + self.base_dn)
@@ -137,7 +138,8 @@ class BasicDeleteTests(BaseDeleteTests):
         try:
             self.ldb.delete("cn=ldaptestcontainer," + self.base_dn)
             self.fail()
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.assertEquals(num, ERR_NOT_ALLOWED_ON_NON_LEAF)
 
         self.ldb.delete("cn=ldaptestcontainer," + self.base_dn, ["tree_delete:1"])
@@ -146,19 +148,22 @@ class BasicDeleteTests(BaseDeleteTests):
             res = self.ldb.search("cn=ldaptestcontainer," + self.base_dn,
                              scope=SCOPE_BASE, attrs=[])
             self.fail()
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.assertEquals(num, ERR_NO_SUCH_OBJECT)
         try:
             res = self.ldb.search("cn=entry1,cn=ldaptestcontainer," + self.base_dn,
                              scope=SCOPE_BASE, attrs=[])
             self.fail()
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.assertEquals(num, ERR_NO_SUCH_OBJECT)
         try:
             res = self.ldb.search("cn=entry2,cn=ldaptestcontainer," + self.base_dn,
                              scope=SCOPE_BASE, attrs=[])
             self.fail()
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.assertEquals(num, ERR_NO_SUCH_OBJECT)
 
         delete_force(self.ldb, "cn=entry1,cn=ldaptestcontainer," + self.base_dn)
@@ -175,7 +180,8 @@ class BasicDeleteTests(BaseDeleteTests):
         try:
             self.ldb.delete(res[0]["dsServiceName"][0])
             self.fail()
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.assertEquals(num, ERR_UNWILLING_TO_PERFORM)
 
         res = self.ldb.search(self.base_dn, attrs=["rIDSetReferences"],
@@ -186,12 +192,14 @@ class BasicDeleteTests(BaseDeleteTests):
         try:
             self.ldb.delete(res[0]["rIDSetReferences"][0])
             self.fail()
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.assertEquals(num, ERR_UNWILLING_TO_PERFORM)
         try:
             self.ldb.delete(res[0]["rIDSetReferences"][0], ["tree_delete:1"])
             self.fail()
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.assertEquals(num, ERR_UNWILLING_TO_PERFORM)
 
         # Deletes failing since three main crossRef objects are protected
@@ -199,23 +207,27 @@ class BasicDeleteTests(BaseDeleteTests):
         try:
             self.ldb.delete("cn=Enterprise Schema,cn=Partitions," + self.configuration_dn)
             self.fail()
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.assertEquals(num, ERR_UNWILLING_TO_PERFORM)
         try:
             self.ldb.delete("cn=Enterprise Schema,cn=Partitions," + self.configuration_dn, ["tree_delete:1"])
             self.fail()
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.assertEquals(num, ERR_UNWILLING_TO_PERFORM)
 
         try:
             self.ldb.delete("cn=Enterprise Configuration,cn=Partitions," + self.configuration_dn)
             self.fail()
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.assertEquals(num, ERR_NOT_ALLOWED_ON_NON_LEAF)
         try:
             self.ldb.delete("cn=Enterprise Configuration,cn=Partitions," + self.configuration_dn, ["tree_delete:1"])
             self.fail()
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.assertEquals(num, ERR_NOT_ALLOWED_ON_NON_LEAF)
 
         res = self.ldb.search("cn=Partitions," + self.configuration_dn, attrs=[],
@@ -225,32 +237,36 @@ class BasicDeleteTests(BaseDeleteTests):
         try:
             self.ldb.delete(res[0].dn)
             self.fail()
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.assertEquals(num, ERR_NOT_ALLOWED_ON_NON_LEAF)
         try:
             self.ldb.delete(res[0].dn, ["tree_delete:1"])
             self.fail()
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.assertEquals(num, ERR_NOT_ALLOWED_ON_NON_LEAF)
 
         # Delete failing since "SYSTEM_FLAG_DISALLOW_DELETE"
         try:
             self.ldb.delete("CN=Users," + self.base_dn)
             self.fail()
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.assertEquals(num, ERR_UNWILLING_TO_PERFORM)
 
         # Tree-delete failing since "isCriticalSystemObject"
         try:
             self.ldb.delete("CN=Computers," + self.base_dn, ["tree_delete:1"])
             self.fail()
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.assertEquals(num, ERR_UNWILLING_TO_PERFORM)
 
     def test_all(self):
         """Basic delete tests"""
 
-        print self.base_dn
+        print(self.base_dn)
 
         # user current time in ms to make unique objects
         import time

@@ -362,7 +362,8 @@ add: userPassword
 userPassword: thatsAcomplPASS2
 """)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
             # Windows (2008 at least) seems to have some small bug here: it
             # returns "0000056A" on longer (always wrong) previous passwords.
@@ -460,7 +461,8 @@ add: userPassword
 userPassword: thatsAcomplPASS2
 """)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
             # Windows (2008 at least) seems to have some small bug here: it
             # returns "0000056A" on longer (always wrong) previous passwords.
@@ -529,7 +531,7 @@ userPassword: thatsAcomplPASS1
                                   msDSUserAccountControlComputed=0)
 
     def _test_userPassword_lockout_with_clear_change(self, method):
-        print "Performs a password cleartext change operation on 'userPassword'"
+        print("Performs a password cleartext change operation on 'userPassword'")
         # Notice: This works only against Windows if "dSHeuristics" has been set
         # properly
 
@@ -554,7 +556,8 @@ add: userPassword
 userPassword: thatsAcomplPASS2
 """)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertTrue('00000056' in msg)
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
 
@@ -594,7 +597,8 @@ add: userPassword
 userPassword: thatsAcomplPASS2
 """)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertTrue('00000056' in msg)
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
 
@@ -606,7 +610,7 @@ userPassword: thatsAcomplPASS2
                                   msDSUserAccountControlComputed=0)
         badPasswordTime = int(res[0]["badPasswordTime"][0])
 
-        print "two failed password change"
+        print("two failed password change")
 
         # Wrong old password
         try:
@@ -619,7 +623,8 @@ add: userPassword
 userPassword: thatsAcomplPASS2
 """)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertTrue('00000056' in msg)
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
 
@@ -644,7 +649,8 @@ add: userPassword
 userPassword: thatsAcomplPASS2
 """)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
             self.assertTrue('00000775' in msg)
 
@@ -667,7 +673,8 @@ add: userPassword
 userPassword: thatsAcomplPASS2
 """)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
             self.assertTrue('00000775' in msg)
 
@@ -690,7 +697,8 @@ add: userPassword
 userPassword: thatsAcomplPASS2x
 """)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
             self.assertTrue('0000775' in msg)
 
@@ -729,7 +737,8 @@ add: userPassword
 userPassword: thatsAcomplPASS2x
 """)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
             self.assertTrue('0000775' in msg)
 
@@ -770,7 +779,8 @@ add: unicodePwd
 unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2x\"".encode('utf-16-le')) + """
 """)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
             self.assertTrue('0000775' in msg)
 
@@ -822,7 +832,8 @@ add: userPassword
 userPassword: thatsAcomplPASS2XYZ
 """)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
             self.assertTrue('00000056' in msg)
 
@@ -846,7 +857,8 @@ add: userPassword
 userPassword: thatsAcomplPASS2XYZ
 """)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
             self.assertTrue('00000056' in msg)
 
@@ -880,7 +892,7 @@ userPassword: thatsAcomplPASS2XYZ
 
 
     def test_unicodePwd_lockout_with_clear_change(self):
-        print "Performs a password cleartext change operation on 'unicodePwd'"
+        print("Performs a password cleartext change operation on 'unicodePwd'")
 
         res = self._check_account("cn=testuser,cn=users," + self.base_dn,
                                   badPwdCount=0,
@@ -903,7 +915,8 @@ add: unicodePwd
 unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2\"".encode('utf-16-le')) + """
 """)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertTrue('00000056' in msg)
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
 
@@ -943,7 +956,8 @@ add: unicodePwd
 unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2\"".encode('utf-16-le')) + """
 """)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertTrue('00000056' in msg)
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
 
@@ -967,7 +981,7 @@ unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2\"".encode('utf-16-le')) 
                                     dsdb.UF_NORMAL_ACCOUNT,
                                   msDSUserAccountControlComputed=0)
 
-        print "two failed password change"
+        print("two failed password change")
 
         # Wrong old password
         try:
@@ -980,7 +994,8 @@ add: unicodePwd
 unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2\"".encode('utf-16-le')) + """
 """)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertTrue('00000056' in msg)
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
 
@@ -1006,7 +1021,8 @@ add: unicodePwd
 unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2\"".encode('utf-16-le')) + """
 """)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
             self.assertTrue('00000775' in msg)
 
@@ -1029,7 +1045,8 @@ add: unicodePwd
 unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2\"".encode('utf-16-le')) + """
 """)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
             self.assertTrue('00000775' in msg)
 
@@ -1052,7 +1069,8 @@ add: unicodePwd
 unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2x\"".encode('utf-16-le')) + """
 """)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
             self.assertTrue('0000775' in msg)
 
@@ -1104,7 +1122,8 @@ add: unicodePwd
 unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2\"".encode('utf-16-le')) + """
 """)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertTrue('00000056' in msg)
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
 
@@ -1128,7 +1147,8 @@ add: unicodePwd
 unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2\"".encode('utf-16-le')) + """
 """)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertTrue('00000056' in msg)
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
 
@@ -1164,7 +1184,8 @@ add: unicodePwd
 unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2\"".encode('utf-16-le')) + """
 """)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertTrue('00000056' in msg)
             self.assertEquals(num, ERR_CONSTRAINT_VIOLATION)
 
@@ -1203,7 +1224,7 @@ unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2\"".encode('utf-16-le')) 
 
     def _test_login_lockout(self, use_kerberos):
         # This unlocks by waiting for account_lockout_duration
-        print "Performs a lockout attempt against LDAP using NTLM or Kerberos"
+        print("Performs a lockout attempt against LDAP using NTLM or Kerberos")
 
         # Change password on a connection as another user
 
@@ -1233,7 +1254,8 @@ unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2\"".encode('utf-16-le')) 
         try:
             ldb_lockout = SamDB(url=host_url, credentials=creds_lockout, lp=lp)
 
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertEquals(num, ERR_INVALID_CREDENTIALS)
 
         res = self._check_account("cn=testuser,cn=users," + self.base_dn,
@@ -1262,7 +1284,8 @@ unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2\"".encode('utf-16-le')) 
         try:
             ldb_lockout = SamDB(url=host_url, credentials=creds_lockout, lp=lp)
 
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertEquals(num, ERR_INVALID_CREDENTIALS)
 
         res = self._check_account("cn=testuser,cn=users," + self.base_dn,
@@ -1280,7 +1303,8 @@ unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2\"".encode('utf-16-le')) 
             ldb_lockout = SamDB(url=host_url, credentials=creds_lockout, lp=lp)
             self.fail()
 
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertEquals(num, ERR_INVALID_CREDENTIALS)
 
         res = self._check_account("cn=testuser,cn=users," + self.base_dn,
@@ -1291,7 +1315,7 @@ unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2\"".encode('utf-16-le')) 
                                   msDSUserAccountControlComputed=0)
         badPasswordTime = int(res[0]["badPasswordTime"][0])
 
-        print "two failed password change"
+        print("two failed password change")
 
         # The wrong password
         creds_lockout.set_password("thatsAcomplPASS1x")
@@ -1300,7 +1324,8 @@ unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2\"".encode('utf-16-le')) 
             ldb_lockout = SamDB(url=host_url, credentials=creds_lockout, lp=lp)
             self.fail()
 
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertEquals(num, ERR_INVALID_CREDENTIALS)
 
         res = self._check_account("cn=testuser,cn=users," + self.base_dn,
@@ -1318,7 +1343,8 @@ unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2\"".encode('utf-16-le')) 
         try:
             ldb_lockout = SamDB(url=host_url, credentials=creds_lockout, lp=lp)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertEquals(num, ERR_INVALID_CREDENTIALS)
 
         res = self._check_account("cn=testuser,cn=users," + self.base_dn,
@@ -1334,7 +1360,8 @@ unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2\"".encode('utf-16-le')) 
         try:
             ldb_lockout = SamDB(url=host_url, credentials=creds_lockout, lp=lp)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertEquals(num, ERR_INVALID_CREDENTIALS)
 
         res = self._check_account("cn=testuser,cn=users," + self.base_dn,
@@ -1350,7 +1377,8 @@ unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2\"".encode('utf-16-le')) 
         try:
             ldb_lockout = SamDB(url=host_url, credentials=creds_lockout, lp=lp)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertEquals(num, ERR_INVALID_CREDENTIALS)
 
         res = self._check_account("cn=testuser,cn=users," + self.base_dn,
@@ -1388,7 +1416,8 @@ unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2\"".encode('utf-16-le')) 
         try:
             ldb_lockout = SamDB(url=host_url, credentials=creds_lockout, lp=lp)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertEquals(num, ERR_INVALID_CREDENTIALS)
 
         res = self._check_account("cn=testuser,cn=users," + self.base_dn,
@@ -1405,7 +1434,8 @@ unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2\"".encode('utf-16-le')) 
         try:
             ldb_lockout = SamDB(url=host_url, credentials=creds_lockout, lp=lp)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertEquals(num, ERR_INVALID_CREDENTIALS)
 
         res = self._check_account("cn=testuser,cn=users," + self.base_dn,
@@ -1432,7 +1462,8 @@ unicodePwd:: """ + base64.b64encode("\"thatsAcomplPASS2\"".encode('utf-16-le')) 
         try:
             ldb_lockout = SamDB(url=host_url, credentials=creds_lockout, lp=lp)
             self.fail()
-        except LdbError, (num, msg):
+        except LdbError as e:
+            (num, msg) = e.args
             self.assertEquals(num, ERR_INVALID_CREDENTIALS)
 
         res = self._check_account("cn=testuser,cn=users," + self.base_dn,

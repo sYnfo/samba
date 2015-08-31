@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
@@ -140,7 +141,8 @@ systemOnly: FALSE
         attr_dn_new = attr_dn.replace(attr_name, attr_name + "-NEW")
         try:
             self.sam_db.rename(attr_dn, attr_dn_new)
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.fail("failed to change lDAPDisplayName for %s: %s" % (attr_name, _))
 
         # compare resulting schemaInfo
@@ -186,7 +188,8 @@ systemOnly: FALSE
         class_dn_new = class_dn.replace(class_name, class_name + "-NEW")
         try:
             self.sam_db.rename(class_dn, class_dn_new)
-        except LdbError, (num, _):
+        except LdbError as e:
+            (num, _) = e.args
             self.fail("failed to change lDAPDisplayName for %s: %s" % (class_name, _))
 
         # compare resulting schemaInfo
